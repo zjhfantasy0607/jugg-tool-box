@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from 'react-hot-toast';
 import "@/styles/globals.css";
-import { cookies } from 'next/headers';
-import RootContextProvider from '@/app/RootContext';
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -14,14 +12,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 页面初始化获取用户token
-  const token = cookies().get('token')?.value || '';
 
   return (
     <html data-theme="lofi" lang="zh">
       <body>
         <Toaster />
-        <RootContextProvider token={token}>{children}</RootContextProvider>
+        {children}
       </body>
     </html>
   );
