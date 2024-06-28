@@ -17,7 +17,7 @@ export const fetchDefault = async (uri: string, options: FetchOptions = {}): Pro
         return response.json();
     } catch (error: any) {
         if (error.name == 'TypeError' && error.message == 'fetch failed') {
-            return { code: -1, msg: '请求服务器失败', data: null };
+            return { code: -1, msg: '网络错误', data: null };
         } else {
             return JSON.parse(error.message);
         }
