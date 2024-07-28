@@ -6,6 +6,10 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+    'size-5',
+    'text-green-500',
+  ],
   theme: {
     extend: {
       backgroundImage: {
@@ -31,6 +35,18 @@ const config: Config = {
           },
           ".bg-primary-content": {
             "background-color": "#ffffff"
+          },
+          ".btn.btn-disabled, .btn[disabled], .btn:disabled": {
+            "background-color": "#cccccc",
+            "color": "#a3a3a3",
+            "border-width": 0
+          },
+          ".progress": {
+            "background-color": "#cccccc"
+          },
+          ".progress:indeterminate": {
+            "--progress-color": "#000000",
+            "background-image": "#000000"
           }
         },
       },

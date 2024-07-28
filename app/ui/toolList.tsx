@@ -1,9 +1,13 @@
 import Link from "next/link";
 
 import Search from "./search";
-import ToolListItem from "./toolist/toolListItem";
+import ToolListChild from "./toolListChild";
+import { getToolsTree } from "@/app/lib/data";
 
-export default function ToolList() {
+export default async function ToolList() {
+
+    const toolTree: ToolTree = await getToolsTree();
+
     return (
         <ul className="min-h-full menu bg-primary-content p-4 w-80  text-base-content">
             {/* PC端 logo */}
@@ -16,7 +20,27 @@ export default function ToolList() {
                 <Search />
             </div>
 
-            <ToolListItem />
+            {toolTree?.data?.tools.map((item: Tool) => <ToolListChild key={item.id} tool={item} />)}
         </ul>
     );
+}
+
+export interface Tool {
+    id: number;
+    pid: number;
+    title: string;
+    icon: string;
+    url: string;
+    created_at: string;
+    updated_at: string;
+    Orders: number;
+    children?: Tool[];
+}
+
+export interface ToolTree {
+    code: number;
+    data: {
+        tools: Tool[];
+    };
+    msg: string;
 }

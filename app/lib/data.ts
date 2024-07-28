@@ -1,3 +1,5 @@
+'use server';
+
 import { fetchGet, fetchPost } from './fetch';
 import { unstable_noStore as noStore } from 'next/cache';
 
@@ -22,4 +24,17 @@ export async function getUserInfoData(token: string) {
     }
 
     return response.data.user;
+}
+
+export async function getToolsTree() {
+    return await fetchPost('api/tools/tree');
+}
+
+export async function getToolsSearch(search: string) {
+    noStore();
+
+    const formData = new FormData();
+    formData.append('search', search);
+
+    return await fetchPost('api/tools/search', formData);
 }

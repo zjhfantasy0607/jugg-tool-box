@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from 'react-hot-toast';
+import StoreProvider from "./StoreProvider";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -16,8 +17,10 @@ export default function RootLayout({
   return (
     <html data-theme="lofi" lang="zh">
       <body>
-        <Toaster />
-        {children}
+        <StoreProvider>
+          <Toaster />
+          {children}
+        </StoreProvider>
       </body>
     </html>
   );

@@ -3,65 +3,51 @@
 import { useState, useRef } from "react";
 import clsx from 'clsx';
 
+import { UserInfoDataInterface } from "@/app/template";
 import UserInfo from "./userInfo";
 import LoginCard from "./cardLogin";
 import RegistCard from "./cardRegist";
 import ForgetCard from "./cardForget";
-import CaptchaCard from "./cardCaptcha";
 
-export default function User({ 
+export default function User({
     userInfoData,
-}: { 
-    userInfoData: UserInfoDataInterface | null 
+}: {
+    userInfoData: UserInfoDataInterface | null
 }) {
-    const dialogRef = useRef<HTMLDialogElement | null>(null);
-    
-    const [cardPrevType, setCardPrevType] = useState<string>('');
     const [cardType, setCardType] = useState<string>('login');
     const [cardShow, setCardShow] = useState<boolean>(false);
-    const userEmailRef = useRef<string>('');
+    const isLogin = Boolean(userInfoData);
 
-    function setCardTypeFunc(type: string) {
-        setCardPrevType(cardType);
-        setCardType(type);
-    }
-
-    const handleCards: HandleCardsInterface = {
-        getCardType: () => cardType,
-        getUserEmail: () => userEmailRef.current,
-        setUserEmail: (email: string) => {userEmailRef.current = email},
-
-        showLogin: () => setCardTypeFunc('login'),
-        showRegist: () => setCardTypeFunc('regist'),
-        showCaptcha: () => setCardTypeFunc('captcha'),
-        showForget: () => setCardTypeFunc('forget'),
-
+    const handleCardsRef = useRef<HandleCardsInterface>({
+        showLogin: () => setCardType('login'),
+        showRegist: () => setCardType('regist'),
+        showForget: () => setCardType('forget'),
         showCard: () => setCardShow(true),
         hiddenCard: () => {
-            if (cardType == 'captcha') {
-                setCardTypeFunc(cardPrevType);
-            } else {
+            // 执行关闭前事件，根据关闭前事件的返回来决定是否关闭卡片显示
+            if (handleCardsRef.current.beforeHiddenCard()) {
                 setCardShow(false);
             }
-        }
-    }
+            // 重置关闭任务
+            handleCardsRef.current.beforeHiddenCard = () => true;
+        },
+        beforeHiddenCard: () => true
+    });
 
     return (
         <>
-            {!Boolean(userInfoData) && <button className="btn btn-primary" onClick={() => handleCards.showCard()}>登录 / 注册</button>}
+            {!isLogin && <button className="btn btn-primary" onClick={() => handleCardsRef.current.showCard()}>登录 / 注册</button>}
 
-            {Boolean(userInfoData) && <UserInfo userInfoData={userInfoData as UserInfoDataInterface} />}
+            {isLogin && <UserInfo userInfoData={userInfoData as UserInfoDataInterface} />}
 
-            <dialog id="login_modal" ref={dialogRef} className={clsx("modal", { 'modal-open': cardShow })} onClick={handleCards.hiddenCard}>
+            <dialog id="login_modal" className={clsx("modal", { 'modal-open': cardShow })} onClick={handleCardsRef.current.hiddenCard}>
                 <div className="modal-box card shrink-0 max-w-sm shadow-2xl bg-base-100" onClick={e => e.stopPropagation()}>
-                    <div className={clsx({ "hidden": cardType !== 'login'  })}><LoginCard  handleCards={handleCards} /></div>
-                    <div className={clsx({ "hidden": cardType !== 'regist' })}><RegistCard handleCards={handleCards} /></div>
-                    <div className={clsx({ "hidden": cardType !== 'forget' })}><ForgetCard handleCards={handleCards} /></div>
-                    <div className={clsx({ "hidden": cardType !== 'captcha' })}>{ cardShow && cardType === 'captcha' && <CaptchaCard handleCards={handleCards} /> }</div>
+                    <div className={clsx({ "hidden": cardType !== 'login' })}><LoginCard handleCards={handleCardsRef.current} /></div>
+                    <div className={clsx({ "hidden": cardType !== 'regist' })}><RegistCard handleCards={handleCardsRef.current} /></div>
+                    <div className={clsx({ "hidden": cardType !== 'forget' })}><ForgetCard handleCards={handleCardsRef.current} /></div>
                 </div>
             </dialog>
         </>
-
     );
 }
 
@@ -72,18 +58,9 @@ export interface CardProps {
 export interface HandleCardsInterface {
     showLogin(): void;
     showRegist(): void;
-    showCaptcha(): void;
     showForget(): void;
     showCard(): void;
     hiddenCard(): void;
-
-    getCardType(): string;
-    getUserEmail(): string;
-    setUserEmail(email: string): void;
+    beforeHiddenCard(): boolean
 }
 
-export interface UserInfoDataInterface {
-    name:   string,
-    email:  string,
-    points: number
-}

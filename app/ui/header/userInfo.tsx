@@ -3,15 +3,13 @@
 import { signOut } from '@/app/lib/actions';
 import toast from 'react-hot-toast';
 
-import { UserInfoDataInterface } from './user';
+import { UserInfoDataInterface } from "@/app/template";
 
-export default function({ 
+export default function ({
     userInfoData
- }: {
-    userInfoData: UserInfoDataInterface 
- }) {
-
-    console.log(userInfoData)
+}: {
+    userInfoData: UserInfoDataInterface
+}) {
 
     async function handleSignOut() {
         const response = await signOut();
@@ -24,9 +22,14 @@ export default function({
         <div className="text-primary flex items-center dropdown dropdown-end relative">
 
             <div className="hidden lg:flex items-center mr-6 cursor-pointer text-sm" tabIndex={0} role="button">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
-                </svg>
+                <div className="bulb-container active">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+                    </svg>
+                    <div className="ripple"></div>
+                    <div className="ripple ripple-2"></div>
+                    <div className="ripple ripple-3"></div>
+                </div>
                 <span className="mx-0.5">{userInfoData.points}</span>
             </div>
 
@@ -44,9 +47,14 @@ export default function({
                 <span className="mx-0.5 mt-0.5 lg:mt-0">{userInfoData.email}</span>
                 <div className="flex items-center mt-[-3px] lg:hidden">
                     <span className="mx-0.5">{userInfoData.points}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-3">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
-                    </svg>
+                    <div className="bulb-container active">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+                        </svg>
+                        <div className="ripple"></div>
+                        <div className="ripple ripple-2"></div>
+                        <div className="ripple ripple-3"></div>
+                    </div>
                 </div>
             </div>
 

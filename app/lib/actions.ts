@@ -12,6 +12,8 @@ export async function regist(
     formDataFilter.append('email', formData.get('email') as string);
     formDataFilter.append('password', formData.get('password') as string);
     formDataFilter.append('confirm_password', formData.get('confirm_password') as string);
+    formDataFilter.append('captcha_token', formData.get('captcha_token') as string);
+    formDataFilter.append('email_code', formData.get('email_code') as string);
 
     if (formData.get('password') !== formData.get('confirm_password')) {
         return { code: 4220, msg: '两次输入的密码不相等' };
@@ -45,8 +47,9 @@ export async function signIn(
     const formDataFilter = new FormData();
     formDataFilter.append('email', formData.get('email') as string);
     formDataFilter.append('password', formData.get('password') as string);
+    formDataFilter.append('captcha_token', formData.get('captcha_token') as string);
 
-    const response = await fetchPost('api/auth/signIn', formDataFilter);
+    const response = await fetchPost('api/auth/sign-in', formDataFilter);
 
     // 成功设置cookie
     if (response?.code == 200 && response?.data?.token) {

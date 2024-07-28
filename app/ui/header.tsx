@@ -1,19 +1,18 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 
 import SidebarButton from "./header/sidebarButton";
 import Search from "./search";
-import User, { UserInfoDataInterface } from "./header/user";
-import { getUserInfoData } from "@/app/lib/data";
+import User from "./header/user";
+import { UserInfoDataInterface } from "@/app/template";
 
-
-export default async function Header() {
-
-    const token = cookies().get('token')?.value || '';
-    const userInfoData: UserInfoDataInterface | null = await getUserInfoData(token);
+export default function Header({
+    userInfoData
+}: {
+    userInfoData: UserInfoDataInterface | null
+}) {
   
     return (
-        <div className="navbar bg-primary-content h-16 shadow">
+        <div className="navbar bg-primary-content h-16 shadow z-50">
             <div className="flex-none text-primary">
                 <SidebarButton />
             </div>
