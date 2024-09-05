@@ -1,8 +1,14 @@
 'use client'
 
-import { CardProps } from "./user"
+import { useAppDispatch, useToggleDialog } from '@/store/hook';
+import { setUserinfo } from '@/store/slices/userinfoSlice';
+import { setDialogType, setBeforeHidden } from '@/store/slices/dialogSlice';
 
-export default function ({handleCards}: CardProps) {
+export default function () {
+
+    const reduxDispatch = useAppDispatch()
+    const toogleDialog = useToggleDialog()
+
     return (
         <form className="card-body">
             <div className="form-control">
@@ -23,8 +29,8 @@ export default function ({handleCards}: CardProps) {
                 </label>
                 <input type="password" placeholder="确认密码" className="input input-bordered" required />
                 <label className="label">
-                    <span onClick={handleCards.showLogin} className="label-text-alt link link-hover">前往登录</span>
-                    <span onClick={handleCards.showRegist} className="label-text-alt link link-hover">前往注册</span>
+                    <span onClick={() => reduxDispatch(setDialogType("login"))} className="label-text-alt link link-hover">前往登录</span>
+                    <span onClick={() => reduxDispatch(setDialogType("regist"))} className="label-text-alt link link-hover">前往注册</span>
                 </label>
             </div>
             <div className="form-control mt-6">

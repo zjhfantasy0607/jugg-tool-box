@@ -1,40 +1,44 @@
 'use client'
 
-import SliderCaptcha from 'rc-slider-captcha';
-
 import React from 'react';
+import SliderCaptcha from 'rc-slider-captcha';
 import { getPuzzle, validPuzzle } from '@/app/lib/api';
 import toast from 'react-hot-toast';
+import { useAppSelector, useAppDispatch, useToggleDialog } from '@/store/hook';
+import { selectBrowserId } from '@/store/slices/userinfoSlice';
+import { selectPrevDialogType, setCaptchaToken } from '@/store/slices/dialogSlice';
 
-export default function ({
-    email,
-    success
-}: {
-    email: string
-    success: (token: string) => void
-}) {
+export default function () {
+
+    const toogleDialog = useToggleDialog()
+    const dispatch = useAppDispatch()
+
+    const browserId = useAppSelector(selectBrowserId)
+    const from = useAppSelector(selectPrevDialogType)
 
     async function verifyCaptcha(data: any) {
         const x = Math.round(Number(data.x)) * 2;
-        const response = await validPuzzle(email, x);
-
+        const response = await validPuzzle(browserId, x);
         if (response.code !== 200) {
             toast.error(response?.msg);
             return Promise.reject("error");
         }
 
+        toast.success("验证成功")
+        
         setTimeout(() => {
-            success(response.data.token);
-        }, 1000);
+            toogleDialog() // 关闭验证码弹窗
+            dispatch(setCaptchaToken({key: from, val: response.data.token})) // 设置token
+        }, 1000)
 
-        return response;
+        return response
     }
 
     return (
         <div className="card-body px-0">
             <div className='w-[272px] m-auto'>
                 <SliderCaptcha
-                    request={() => getPuzzle(email)}
+                    request={() => getPuzzle(browserId)}
                     onVerify={verifyCaptcha}
                     bgSize={{ width: 272, height: 136 }}
                     tipText={{

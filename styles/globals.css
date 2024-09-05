@@ -10,6 +10,25 @@ html {
     overflow: hidden !important;
 }
 
+/* a标签选中样式 */
+.menu li>*:not(ul, .menu-title, details, .btn):active,
+.menu li>*:not(ul, .menu-title, details, .btn).active,
+.menu li>details>summary:active {
+    background: rgba(1, 1, 1, 0.1);
+    color: #0d0d0d
+}
+
+:where(.menu li:not(.menu-title, .disabled) > *:not(ul, details, .menu-title)):not(summary, .active, .btn).focus,
+:where(.menu li:not(.menu-title, .disabled) > *:not(ul, details, .menu-title)):not(summary, .active, .btn):focus,
+:where(.menu li:not(.menu-title, .disabled) > *:not(ul, details, .menu-title)):is(summary):not(.active, .btn):focus-visible,
+:where(.menu li:not(.menu-title, .disabled) > details > summary:not(.menu-title)):not(summary, .active, .btn).focus,
+:where(.menu li:not(.menu-title, .disabled) > details > summary:not(.menu-title)):not(summary, .active, .btn):focus,
+:where(.menu li:not(.menu-title, .disabled) > details > summary:not(.menu-title)):is(summary):not(.active, .btn):focus-visible {
+    background: rgba(1, 1, 1, 0.1);
+    color: #0d0d0d
+}
+
+/* 灯泡发光动画 */
 .hover\:border-primary:hover {
     border-color: #0d0d0d !important;
 }
@@ -23,7 +42,7 @@ html {
     display: inline-block;
 }
 
-.bulb-container.active  {
+.bulb-container.active {
     position: relative;
     display: inline-block;
 }
@@ -59,10 +78,12 @@ html {
         transform: scale(0);
         opacity: 1;
     }
+
     50% {
         transform: scale(1.2);
         opacity: 0.5;
     }
+
     100% {
         transform: scale(1.4);
         opacity: 0;

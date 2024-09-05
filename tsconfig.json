@@ -21,6 +21,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/common/user/cardWrapper.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/common/user/cardWrapper.tsx", "app/ui/dialog/forgetDialog.tsx"],
   "exclude": ["node_modules"]
 }

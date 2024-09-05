@@ -1,7 +1,7 @@
 'use server';
 
-import { fetchGet, fetchPost } from './fetch';
-import { cookies } from 'next/headers';
+import { fetchGet, fetchPost } from './fetch'
+import { cookies } from 'next/headers'
 
 export async function regist(
     prevState: string | undefined,
@@ -53,20 +53,37 @@ export async function signIn(
 
     // 成功设置cookie
     if (response?.code == 200 && response?.data?.token) {
+        const cookiesTime = 3600 * 24 * 5 // cookeie 5天后过期
+
         cookies().set({
             name: 'token',
             value: response.data.token,
             httpOnly: true,
             path: '/',
-            maxAge: 3600 * 24 * 5 // cookeie 5天后过期
+            maxAge: cookiesTime 
         })
 
-        // 清空 token 值不返回给前端
-        response.data.token = 'none';
+        cookies().set({
+            name: 'uid',
+            value: response.data?.userinfo?.uid,
+            httpOnly: true,
+            path: '/',
+            maxAge: cookiesTime 
+        })
+
+        cookies().set({
+            name: 'email',
+            value: response.data?.userinfo?.email,
+            httpOnly: true,
+            path: '/',
+            maxAge: cookiesTime 
+        })
+        // 清空 token 值不进行返回
+        response.data.token = 'none'
     }
 
     // 请求登录接口
-    return response;
+    return response
 }
 
 export async function signOut() {

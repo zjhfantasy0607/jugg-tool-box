@@ -47,6 +47,15 @@ const config: Config = {
           ".progress:indeterminate": {
             "--progress-color": "#000000",
             "background-image": "#000000"
+          },
+          ".diff-item-1:after": {
+            "background-color": "rgba(255, 255, 255, 0.5)",
+            "border-color": "#ffffff",
+            "outline-color": "rgba(0, 0, 0, 0.05)"
+          },
+          ".btn-active": {
+            "background": "#c8c7c7",
+            "color": "#000000"
           }
         },
       },

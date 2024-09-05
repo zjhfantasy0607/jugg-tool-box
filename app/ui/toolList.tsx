@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import Search from "./search";
 import ToolListChild from "./toolListChild";
-import { getToolsTree } from "@/app/lib/data";
+import { getToolsTree } from "@/app/lib/api";
 
 export default async function ToolList() {
 
@@ -26,15 +26,16 @@ export default async function ToolList() {
 }
 
 export interface Tool {
-    id: number;
-    pid: number;
-    title: string;
-    icon: string;
-    url: string;
-    created_at: string;
-    updated_at: string;
-    Orders: number;
-    children?: Tool[];
+    id: number
+    pid: number
+    title: string
+    icon: string
+    url: string
+    created_at: string
+    updated_at: string
+    Orders: number
+    Tool: string
+    children?: Tool[]
 }
 
 export interface ToolTree {

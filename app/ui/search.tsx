@@ -6,7 +6,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 
 import { ToggleGlobalSidebar } from '@/app/lib/utils';
-import { getToolsSearch } from "@/app/lib/data";
+import { getToolsSearch } from "@/app/lib/api";
 
 export default function Search() {
 
@@ -21,7 +21,7 @@ export default function Search() {
         // todo远程获取搜索工具列表
         const response = await getToolsSearch(value);
         if (response.data) {
-            setSearchList(response.data.tools);
+            setSearchList(response.data.tools || []);
         }
     }, 300);
 

@@ -1,16 +1,22 @@
 'use server';
 
-import { fetchGet, fetchPost } from './fetch';
-import { cookies } from 'next/headers';
-import createPuzzle from 'node-puzzle';
-import path from 'path';
-import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
-import { promisify } from 'util';
-import { GetRandomNumber } from '@/app/lib/utils';
+import { fetchPost } from './fetch'
+import { cookies } from 'next/headers'
+import createPuzzle from 'node-puzzle'
+import path from 'path'
+import fs from 'fs'
+import { v4 as uuidv4 } from 'uuid'
+import { promisify } from 'util'
+import { GetRandomNumber } from '@/app/lib/utils'
+import { unstable_noStore as noStore } from 'next/cache'
+// import { revalidatePath } from 'next/cache'
 
 const readFile = promisify(fs.readFile);
 const unlink = promisify(fs.unlink);
+
+function Token() {
+    return cookies().get('token')?.value || '';
+}
 
 export async function sendEmailCode(email: string, captchaToken: string) {
     // 过滤formData中的数据
@@ -24,8 +30,7 @@ export async function sendEmailCode(email: string, captchaToken: string) {
     return { code: 200, msg: "发送成功" };
 }
 
-export async function getPuzzle(userEmail: string) {
-
+export async function getPuzzle(browserId: string) {
     const random = GetRandomNumber(1, 14);
     const imgPath = path.join(process.cwd(), 'public', 'puzzle_img', 'source', `img (${random}).jpg`);
 
@@ -48,8 +53,8 @@ export async function getPuzzle(userEmail: string) {
 
     // 过滤formData中的数据
     const formDataFilter = new FormData();
-    formDataFilter.append('email', userEmail);
-    formDataFilter.append('puzzleX', String(res.x));
+    formDataFilter.append('browser_id', browserId);
+    formDataFilter.append('puzzle_x', String(res.x));
 
     // 发送到服务器进行记录
     await fetchPost('api/auth/set-captcha', formDataFilter);
@@ -72,15 +77,60 @@ export async function getPuzzle(userEmail: string) {
     };
 }
 
-export async function validPuzzle(userEmail: string, puzzleX: number) {
-
+export async function validPuzzle(browserId: string, puzzleX: number) {
     // 过滤formData中的数据
     const formDataFilter = new FormData();
-    formDataFilter.append('email', userEmail);
-    formDataFilter.append('puzzleX', String(puzzleX));
+    formDataFilter.append('browser_id', browserId);
+    formDataFilter.append('puzzle_x', String(puzzleX));
 
     // 发送到服务器进行记录
     return await fetchPost('api/auth/validate-captcha', formDataFilter);
+}
+
+export async function getUserInfoData() {
+    noStore()
+    
+    const token = Token();
+    if (!token) {
+        return null;
+    }
+    
+    const Bearer = "Bearer " + token;
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", Bearer);
+
+    const response = await fetchPost('api/auth/info', null, {
+        headers: myHeaders
+    });
+    
+    if (response.code !== 200) {
+        return null
+    }
+
+    return response.data.user;
+}
+
+export async function getToolsTree() {
+    return await fetchPost('api/tools/tree');
+}
+
+export async function getToolsSearch(search: string) {
+    noStore()
+
+    const formData = new FormData();
+    formData.append('search', search);
+
+    return await fetchPost('api/tools/search', formData);
+}
+
+export async function getPoints(width: number, height: number, num: number) {
+    noStore()
+    const formData = new FormData();
+    formData.append('width', width.toString());
+    formData.append('height', height.toString());
+    formData.append('num', num.toString());
+
+    return await fetchPost('api/img/points', formData);
 }
 
 export async function imgResize(imgBase64: string, resize: string) {
@@ -89,20 +139,82 @@ export async function imgResize(imgBase64: string, resize: string) {
     formData.append('imgBase64', imgBase64);
     formData.append('resize', resize);
 
-    let token = cookies().get('token')?.value || '';
-
-    if (token == '') {
+    const token = Token();
+    if (!token) {
         return null;
     }
-
-    token = "Bearer " + token;
-
+    
+    const Bearer = "Bearer " + token;
     const myHeaders = new Headers();
-    myHeaders.append("Authorization", token);
+    myHeaders.append("Authorization", Bearer);
 
     const response = await fetchPost('api/img/resize', formData, {
         headers: myHeaders
     });
 
     return response;
+}
+
+export async function getProgress() {
+    noStore()
+
+    const token = Token();
+    if (!token) {
+        return null;
+    }
+
+    const Bearer = "Bearer " + token;
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", Bearer);
+
+    const response = await fetchPost('api/img/progress', null, {
+        headers: myHeaders
+    });
+
+    // const uid =  cookies().get('uid')?.value || ''
+    // const path = '/task/' + uid
+    // revalidatePath(path)
+
+    return response;
+}
+
+export async function getTask(taskId: string) {
+    noStore()
+
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    // 刷新 tasks 页面的任务状态
+    const response = await fetchPost('api/tasks/task', formData)
+
+    return response;
+}
+
+export async function getTasks(offset: number, limit: number) {
+    noStore()
+
+    const token = Token()
+    if (!token) {
+        return null
+    }
+    
+    const Bearer = "Bearer " + token
+    const myHeaders = new Headers()
+    myHeaders.append("Authorization", Bearer)
+
+    const formData = new FormData();
+    formData.append('offset', offset.toString())
+    formData.append('limit', limit.toString())
+
+    const response = await fetchPost('api/tasks', formData, {
+        headers: myHeaders,
+    })
+
+    let tasks = []
+    if (response?.code == 200 && response?.data?.tasks?.length > 0) {
+        tasks = response.data
+    }
+
+    // await new Promise(resolve => setTimeout(resolve, 3000))
+
+    return tasks
 }
