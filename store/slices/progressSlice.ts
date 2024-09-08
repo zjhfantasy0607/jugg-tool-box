@@ -5,8 +5,10 @@ import { RootState } from '@/store/store'
 
 const PROGRESS_REQUEST_INTERVAL = 1500;
 
+export type TaskStatus = 'pending' | 'producing' | 'success' | 'failed';
+
 export interface Task {
-    status: 'pending' | 'producing' | 'success' | 'failed';
+    status: TaskStatus;
     progress: number;
     rank: number;
 }

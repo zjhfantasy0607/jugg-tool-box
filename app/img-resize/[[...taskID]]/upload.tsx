@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react"
 import toast from 'react-hot-toast'
 import { selectUserinfo } from "@/store/slices/userinfoSlice"
 import { useAppSelector } from "@/store/hook"
-import { getPoints } from "@/app/lib/api"
+import { countPoints } from "@/app/lib/api"
 import path from 'path'
 
 function Upload({
@@ -50,12 +50,12 @@ function Upload({
         let resize = Number(resizeNum)
         if (isInit) { // 从之前的任务参数之填入参数
           setResizeNum(inputParams.resize)
-          resize =  Number(inputParams.resize)
+          resize = Number(inputParams.resize)
         } else {
           uploadCallback(imgurl)
         }
 
-        const response = await getPoints(img.width * resize, img.height * resize, 1) // 获取需要消耗的点数
+        const response = await countPoints(img.width * resize, img.height * resize, 1) // 计算需要消耗的点数
         if (response?.code == 200) {
           setPoints(response?.data?.points)
         }
@@ -87,10 +87,15 @@ function Upload({
 
   // 图片比例修改
   async function handleResizeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setResizeNum(e.target.value)
-    const resize = Number(e.target.value)
-    const response = await getPoints(imgResolution.width * resize, imgResolution.height * resize, 1) // 获取需要消耗的点数
+    const resize = Number(e.target.value);
+    const max = 5000;
+    if (imgResolution.width * resize > max || imgResolution.height * resize > max) {
+      toast.error("分辨率过高，无法选择")
+      return false;
+    }
 
+    setResizeNum(e.target.value)
+    const response = await countPoints(imgResolution.width * resize, imgResolution.height * resize, 1) // 获取需要消耗的点数
     if (response?.code == 200) {
       setPoints(response?.data?.points)
     }

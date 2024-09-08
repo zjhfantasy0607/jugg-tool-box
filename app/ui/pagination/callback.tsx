@@ -1,17 +1,20 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 
 export default function Pagination({
     page,
     total,
     len,
-    buttonNum
+    buttonNum,
+    callback,
 }: {
     page: number
     total: number
     len: number
     buttonNum: number
+    callback: (page: number) => void
 }) {
     const pathname = usePathname();
 
@@ -78,7 +81,7 @@ export default function Pagination({
     return (
         <div className="flex justify-center join">
             {page === 1 && <button className="join-item btn btn-sm md:btn-md">«</button>}
-            {page !== 1 && <a className="join-item btn btn-sm md:btn-md" href={buildUrl(page - 1)}>«</a>}
+            {page !== 1 && <button className="join-item btn btn-sm md:btn-md" onClick={() => { callback(page - 1) }}>«</button>}
 
             {pages.map((p, index) => {
                 if (p === "...") {
@@ -87,11 +90,11 @@ export default function Pagination({
                 if (p === page) {
                     return <button type="button" key={index} className="join-item btn btn-sm md:btn-md btn-active">{page}</button>
                 }
-                return <a key={index} className='join-item btn btn-sm md:btn-md' href={buildUrl(Number(p))}>{p}</a>
+                return <button key={index} className='join-item btn btn-sm md:btn-md' onClick={() => { callback(Number(p)) }}>{p}</button>
             })}
 
             {page === totalPage && <button className="join-item btn btn-sm md:btn-md">»</button>}
-            {page !== totalPage && <a className="join-item btn btn-sm md:btn-md" href={buildUrl(page + 1)}>»</a>}
+            {page !== totalPage && <button className="join-item btn btn-sm md:btn-md" onClick={() => { callback(page + 1) }}>»</button>}
         </div>
     );
 }

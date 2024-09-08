@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { promisify } from 'util'
 import { GetRandomNumber } from '@/app/lib/utils'
 import { unstable_noStore as noStore } from 'next/cache'
+import { totalmem } from 'os';
 // import { revalidatePath } from 'next/cache'
 
 const readFile = promisify(fs.readFile);
@@ -89,12 +90,12 @@ export async function validPuzzle(browserId: string, puzzleX: number) {
 
 export async function getUserInfoData() {
     noStore()
-    
+
     const token = Token();
     if (!token) {
         return null;
     }
-    
+
     const Bearer = "Bearer " + token;
     const myHeaders = new Headers();
     myHeaders.append("Authorization", Bearer);
@@ -102,7 +103,7 @@ export async function getUserInfoData() {
     const response = await fetchPost('api/auth/info', null, {
         headers: myHeaders
     });
-    
+
     if (response.code !== 200) {
         return null
     }
@@ -123,14 +124,14 @@ export async function getToolsSearch(search: string) {
     return await fetchPost('api/tools/search', formData);
 }
 
-export async function getPoints(width: number, height: number, num: number) {
+export async function countPoints(width: number, height: number, num: number) {
     noStore()
     const formData = new FormData();
     formData.append('width', width.toString());
     formData.append('height', height.toString());
     formData.append('num', num.toString());
 
-    return await fetchPost('api/img/points', formData);
+    return await fetchPost('api/img/count-points', formData);
 }
 
 export async function imgResize(imgBase64: string, resize: string) {
@@ -143,7 +144,7 @@ export async function imgResize(imgBase64: string, resize: string) {
     if (!token) {
         return null;
     }
-    
+
     const Bearer = "Bearer " + token;
     const myHeaders = new Headers();
     myHeaders.append("Authorization", Bearer);
@@ -196,7 +197,7 @@ export async function getTasks(offset: number, limit: number) {
     if (!token) {
         return null
     }
-    
+
     const Bearer = "Bearer " + token
     const myHeaders = new Headers()
     myHeaders.append("Authorization", Bearer)
@@ -209,12 +210,13 @@ export async function getTasks(offset: number, limit: number) {
         headers: myHeaders,
     })
 
-    let tasks = []
+    let result = null
+    
     if (response?.code == 200 && response?.data?.tasks?.length > 0) {
-        tasks = response.data
+        result = response.data
     }
 
     // await new Promise(resolve => setTimeout(resolve, 3000))
 
-    return tasks
+    return result
 }

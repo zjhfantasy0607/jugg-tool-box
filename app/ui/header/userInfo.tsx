@@ -92,8 +92,8 @@ export default function ({
             </div>
 
             <ul ref={eleRef} tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-44 absolute top-full mt-6">
-                <li onClick={dropdownHandleClick}><a>积分记录</a></li>
-                <li onClick={dropdownHandleClick}><a href={`/tasks/${userInfo.uid}`}>任务记录</a></li>
+                <li onClick={dropdownHandleClick}><Link href={`/points/${userInfo.uid}`}>积分记录</Link></li>
+                <li onClick={dropdownHandleClick}><Link href={`/tasks/${userInfo.uid}`}>任务记录</Link></li>
                 <li onClick={dropdownHandleClick}><a onClick={handleSignOut}>退出登录</a></li>
             </ul>
         </div>

@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { selectTask, selectTotalRank } from "@/store/slices/progressSlice"
 import { updateUserinfo } from "@/store/slices/userinfoSlice"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
-import { getTask, imgResize } from "../../lib/api"
+import { getTask, imgResize } from "@/app/lib/api"
 import { progressUp } from "@/store/slices/progressSlice"
 import toast from "react-hot-toast"
 
@@ -37,9 +37,9 @@ export default function Resize({ params }: { params: { taskID: string[] } }) {
           setOutput(JSON.parse(response.data.task.output))
         }
         if (response.data.task?.source) {
-          const source = JSON.parse(response.data.task.source)[0] || ''
-          let origin = "/images/upload/" + source.replace(/\\/g, '/')
-          setOrigin(origin)
+            const source = JSON.parse(response.data.task.source)[0] || ''
+            let origin = "/images/upload/" + source.replace(/\\/g, '/')
+            setOrigin(origin)
         }
         if (response.data.task?.params) {
           const params = JSON.parse(response.data.task.params) || {}

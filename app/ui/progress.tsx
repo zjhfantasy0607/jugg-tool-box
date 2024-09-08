@@ -8,7 +8,7 @@ interface NewTask extends Task {
   totalRank: Number;
 }
 
-function Progress({ task }: { task: NewTask }) {
+export default function Progress({ task }: { task: NewTask }) {
   const isPending = (task.status == 'pending')
 
   // 框加载动画
@@ -51,8 +51,6 @@ function Progress({ task }: { task: NewTask }) {
     </animated.div>
   )
 }
-
-export default React.memo(Progress)
 
 function Rank({
   props,
