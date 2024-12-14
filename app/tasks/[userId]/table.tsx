@@ -1,13 +1,11 @@
 'use client'
 
-import './page.css'
-import React, { useRef, useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useRef } from 'react'
 import Link from "next/link"
 import toast from 'react-hot-toast'
-import { useAppSelector } from "@/store/hook"
+import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { selectTasks, Task as ProgressTask, TaskStatus } from "@/store/slices/progressSlice"
 import Image from 'next/image'
-import { getTask } from "@/app/lib/api"
 
 export default function Table({
     tableData
@@ -81,66 +79,26 @@ const Tr = React.memo(({
     task: Task
     progress: ProgressTask | null
 }) => {
-    const [status, setStatus] = useState<TaskStatus>(task.status);
-    const [progressNum, setProgressNum] = useState(0);
-    const [endtime, setEndtime] = useState(task.end_time);
-    const [imgsrc, setImgsrc] = useState('');
+    const endtime = progress?.endtime || task.end_time; // 任务完成时间
 
-    useEffect(() => {
-        if (task.output && imgsrc == '') { // 设置结果图
-            const output = JSON.parse(task.output)[0] || ''
-            setImgsrc(output.replace(/\\/g, '/'))
-        }
-        if (progress) {
-            const num = progress.progress * 100;
-            setStatus(progress.status);
-            setProgressNum(num === 1 ? 0 : num);
-        } else if (progressNum > 0) {
-            setStatus('success');
-            (async () => {
-                const response = await getTask(task.task_id)
-                if (!(response && response.code == 200)) {
-                    return;
-                }
-                if (response.data.task?.output) { // 设置成功时间
-                    setEndtime(response.data.task.end_time)
-                }
-                if (response.data.task?.output) { // 设置成功预览图片
-                    const output = JSON.parse(response.data.task.output)[0] || '';
-                    setImgsrc(output.replace(/\\/g, '/'));
-                }
-            })()
-        }
-    }, [progress])
+    let status = task.status;
+    if (progress) {
+        status = progress.status;
+    }
 
-    const HandleTooltip = async (e: React.MouseEvent<HTMLDivElement>) => {
-        // 获取被点击的元素
-        const element = e.currentTarget;
-        // 获取自定义属性 data-taskid 的值
-        const taskId = element.getAttribute('data-tip');
+    // 任务输出图片
+    let output = progress?.output || task.output;
+    output = JSON.parse(output)[0] || '';
+    output = output.replace(/\\/g, '/');
 
-        if (taskId) {
-            try {
-                await navigator.clipboard.writeText(taskId);
-                toast.success('复制成功')
-            } catch (err) {
-                // 使用 document.execCommand 作为备用方案
-                const textArea = document.createElement("textarea");
-                textArea.value = taskId;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    toast.success('复制成功');
-                } catch (error) {
-                    console.error("备用复制失败", error);
-                }
-                document.body.removeChild(textArea);
-            }
-        }
-    };
+    // 任务进度百分比
+    let progressNum = Math.ceil((progress?.progress || 0) * 100)
+    // - 进度默认会在1%的时候卡顿一会，影响体验，故修改为 0
+    if (progressNum == 1) {
+        progressNum = 0
+    }
 
-    const getStatusLabel = (status: TaskStatus) => {
+    const getStatusLabel = (status: TaskStatus, progressNum: number) => {
         switch (status) {
             case 'success':
                 return <span className="text-green-500">完成</span>;
@@ -149,11 +107,11 @@ const Tr = React.memo(({
             case 'pending':
                 return <span className="text-warning">排队中</span>;
             case 'producing':
-                return <span className="text-info">{progressNum.toFixed(0)}%</span>;
+                return <span className="text-info">{progressNum}%</span>;
             default:
                 return null;
         }
-    };
+    }
 
     return (
         <tr>
@@ -168,11 +126,11 @@ const Tr = React.memo(({
             <td className="min-w-36">{task.start_time}</td>
             <td className="min-w-36">{endtime === '0001-01-01 00:00:00' ? '' : endtime}</td>
             <td>
-                {getStatusLabel(status)}
+                {getStatusLabel(status, progressNum)}
             </td>
             <td className='w-20 h-14 lg:h-16 !px-2 !py-1'>
                 <div className='w-full h-full relative overflow-hidden'>
-                    {imgsrc && <Image className='m-auto object-contain' fill priority src={"/images/output/thumb/" + imgsrc} sizes="(max-width: 60px) 100vw" alt={""} />}
+                    {output && <Image className='m-auto object-contain' fill priority src={"/images/output/thumb/" + output} sizes="(max-width: 60px) 100vw" alt={""} />}
                 </div>
             </td>
             <th className="w-10">
@@ -185,3 +143,30 @@ const Tr = React.memo(({
         </tr>
     )
 })
+
+const HandleTooltip = async (e: React.MouseEvent<HTMLDivElement>) => {
+    // 获取被点击的元素
+    const element = e.currentTarget;
+    // 获取自定义属性 data-taskid 的值
+    const taskId = element.getAttribute('data-tip');
+
+    if (taskId) {
+        try {
+            await navigator.clipboard.writeText(taskId);
+            toast.success('复制成功')
+        } catch (err) {
+            // 使用 document.execCommand 作为备用方案
+            const textArea = document.createElement("textarea");
+            textArea.value = taskId;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                toast.success('复制成功');
+            } catch (error) {
+                console.error("备用复制失败", error);
+            }
+            document.body.removeChild(textArea);
+        }
+    }
+}

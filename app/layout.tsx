@@ -34,10 +34,10 @@ export default async function RootLayout({
               <ToolList />
             </div>
 
-            <div className="drawer-content flex flex-col items-center bg-primary-content h-svh overflow-hidden">
+            <div className="drawer-content items-center bg-primary-content h-svh overflow-hidden relative">
               {/* Page content here */}
               <Header />
-              <main className="w-full min-h-full overflow-y-auto pb-[4rem]">
+              <main id="main" className="w-full min-h-full overflow-y-auto pt-16 absolute inset-0">
                 {children}
               </main>
             </div>

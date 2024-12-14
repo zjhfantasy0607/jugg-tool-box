@@ -24,7 +24,7 @@ export default function () {
             return Promise.reject("error");
         }
 
-        toast.success("验证成功")
+        // toast.success("验证成功")
         
         setTimeout(() => {
             toogleDialog() // 关闭验证码弹窗

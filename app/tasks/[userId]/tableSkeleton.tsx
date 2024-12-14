@@ -1,5 +1,3 @@
-import './page.css'
-
 export default function TableSkeleton({ len }: { len: number }) {
     const tr = Array.from({ length: len })
     return (

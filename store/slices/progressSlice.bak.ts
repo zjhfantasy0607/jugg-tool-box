@@ -1,5 +1,7 @@
 import { createAppSlice } from "@/store/createAppSlice"
 import type { PayloadAction } from "@reduxjs/toolkit";
+import { getProgress } from '@/app/lib/api'
+import { RootState } from '@/store/store'
 import { TokenToken } from '@/app/lib/api'
 
 export type TaskStatus = 'pending' | 'producing' | 'success' | 'failed' | 'remove';
@@ -37,11 +39,11 @@ export const progressSlice = createAppSlice({
     reducers: (create) => ({
         progressStart: create.asyncThunk(
             async (_, { getState, dispatch }) => {
+
                 if (isConn) {
                     return
                 } else {
-                    // dispatch(updateIsEnd(false));
-                    isConn = true;
+                    isConn = true
                 }
 
                 const token = await TokenToken();
@@ -54,21 +56,14 @@ export const progressSlice = createAppSlice({
 
                 ws.onmessage = (event) => {
                     const message = JSON.parse(event.data);
-
-                    dispatch(updateIsEnd(message.isEnd));
-                    dispatch(updateTotalRank(message.totalRank));
-                    Object.entries(message.tasks as Record<string, Task>).forEach(([taskId, task]) => {
-                        dispatch(updateTask({ taskId, task }));
-                        if (task.status == "success" || task.status == "failed") {
-                            setTimeout(() => {
-                                dispatch(deleteTask(taskId));
-                            }, 10000)
-                        }
-                    });
+                    if (message.isEnd) { // 所有进度查询完毕关闭链接
+                        ws.close();
+                    }
+                    dispatch(updateTask(message));
                 };
 
                 ws.onerror = (error) => {
-                    console.log(error)
+                    console.error('WebSocket error:', error);
                 };
 
                 ws.onclose = () => {
@@ -79,29 +74,39 @@ export const progressSlice = createAppSlice({
                 return 'WebSocket connected';
             },
         ),
-        updateIsEnd: create.reducer((state, action: PayloadAction<boolean>) => {
-            state.isEnd = action.payload;
-        }),
-        updateTotalRank: create.reducer((state, action: PayloadAction<number>) => {
-            state.totalRank = action.payload;
-        }),
-        updateTask: create.reducer((state, action: PayloadAction<{ taskId: string, task: Task }>) => {
-            // 不在以下状态才更新
-            if (!state.tasks[action.payload.taskId]) {
-                state.tasks[action.payload.taskId] = action.payload.task;
-                return
-            }
+        updateTask: create.reducer((state, action: PayloadAction<TaskState>) => {
+            state.isEnd = action.payload.isEnd;
+            state.totalRank = action.payload.totalRank;
 
-            if (!['success', 'failed', 'remove'].includes(state.tasks[action.payload.taskId].status)) {
-                const progress = state.tasks[action.payload.taskId].progress
-                state.tasks[action.payload.taskId] = action.payload.task;
-                if (progress > action.payload.task.progress) { // 当原先的进度比现在的要大时，不更新进度
-                    state.tasks[action.payload.taskId].progress = progress
+            Object.entries(action.payload.tasks).forEach(([taskId, task]) => {
+                // 如果任务不存在，创建新任务
+                if (!state.tasks[taskId]) {
+                    state.tasks[taskId] = {
+                        status: 'pending',
+                        progress: 0,
+                        rank: 0,
+                        endtime: '',
+                        output: '',
+                        params: ''
+                    };
                 }
-            }
-        }),
-        deleteTask: create.reducer((state, action: PayloadAction<string>) => {
-            delete state.tasks[action.payload];
+
+                const stateTask = state.tasks[taskId];
+
+                // 只有在特定状态下才更新
+                if (!['success', 'failed', 'remove'].includes(stateTask.status)) {
+                    // 直接赋值，immer 会处理不可变性
+                    state.tasks[taskId] = {
+                        ...stateTask,
+                        status: task.status,
+                        rank: task.rank,
+                        endtime: task.endtime,
+                        output: task.output,
+                        params: task.params,
+                        progress: task.progress > stateTask.progress ? task.progress : stateTask.progress
+                    };
+                }
+            });
         })
     }),
     selectors: {
@@ -112,7 +117,7 @@ export const progressSlice = createAppSlice({
     },
 })
 
-export const { progressStart, updateTask, updateIsEnd, updateTotalRank, deleteTask } = progressSlice.actions
+export const { progressStart, updateTask } = progressSlice.actions
 
 export const {
     selectIsEnd,

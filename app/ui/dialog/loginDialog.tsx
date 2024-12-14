@@ -1,12 +1,11 @@
 'use client'
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { use, useEffect, useRef, useState } from 'react';
+import { use, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { signIn } from '@/app/lib/actions';
 
 import { useAppSelector, useAppDispatch, useToggleDialog } from '@/store/hook';
-import { setUserinfo } from '@/store/slices/userinfoSlice';
 import { setDialogType, selectCaptchaToken, setCaptchaToken } from '@/store/slices/dialogSlice';
 
 export default function () {
@@ -14,30 +13,32 @@ export default function () {
     const toogleDialog = useToggleDialog()
 
     const captcahFrom = useRef<string>('');  // 记录人机验证触发起来的位置
-    const captchaToken = useAppSelector(state => selectCaptchaToken(state, "login")) || ''
+    const captchaToken = useAppSelector(state => selectCaptchaToken(state, "login")) || '';
 
-    const [response, dispatch] = useFormState(signIn, undefined)
-    const formRef = useRef<HTMLFormElement>(null)
+    const [response, dispatch] = useFormState(signIn, undefined);
+    const formRef = useRef<HTMLFormElement>(null);
+
+    console.log(response)
 
     useEffect(() => {
-        if (!response) return
-        if (response?.code == 200 && response?.data?.token) {
-            toast.success('欢迎登录 ^_^')
-            // 更新全局用户信息
-            const userinfo = response.data.userinfo
-            reduxDispatch((setUserinfo(userinfo)))
-            // 重置登录卡片
-            formRef?.current?.reset() // 重置表单状态
-            toogleDialog() // 关闭登录窗口
-            // 检查任务队列
-        } else {
-            // 人机验证失败时重置验证码token
-            if (response?.msg === '人机验证失败') {
-                // 清除当前token
-                reduxDispatch(setCaptchaToken({ key: 'login', val: '' }))
-            }
-            toast.error(response?.msg)
-        }
+        // if (!response) return
+        // if (response?.code == 200 && response?.data?.token) {
+        //     toast.success('欢迎登录 ^_^')
+        //     // 更新全局用户信息
+        //     const userinfo = response.data.userinfo
+        //     reduxDispatch((setUserinfo(userinfo)))
+        //     // 重置登录卡片
+        //     formRef?.current?.reset() // 重置表单状态
+        //     toogleDialog() // 关闭登录窗口
+        //     // 检查任务队列
+        // } else {
+        //     // 人机验证失败时重置验证码token
+        //     if (response?.msg === '验证码错误') {
+        //         // 清除当前token
+        //         reduxDispatch(setCaptchaToken({ key: 'login', val: '' }))
+        //     }
+        //     toast.error(response?.msg)
+        // }
     }, [response])
 
     useEffect(() => {

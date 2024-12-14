@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import Pagination from '@/app/ui/pagination/callback'
-import { getTasks } from '@/app/lib/api'
-import Table, { Task } from './table'
+import { getPoints } from '@/app/lib/api'
+import Table, { PointRecord } from './table'
 import TableSkeleton from './tableSkeleton'
 
 export default function TableWraper() {
 
-    const len = 7;
+    const len = 8;
     const [page, setPage] = useState<number>(1);
     const [loading, setLoading] = useState<boolean>(true);
     const [total, setTotal] = useState<number>(0);
-    const [data, setData] = useState<Task[]>([]);
+    const [data, setData] = useState<PointRecord[]>([]);
 
     useEffect(() => {
         fetchData(page);
@@ -23,11 +23,11 @@ export default function TableWraper() {
         setLoading(true); // 开始加载，显示骨架屏
 
         const start = (page - 1) * len;
-        const data: { tasks: [], total: number } = await getTasks(start, len) || { tasks: [], total: 0 };
+        const data: { points: [], total: number } = await getPoints(start, len) || { points: [], total: 0 };
 
         setLoading(false);
         setTotal(data.total);
-        setData(data.tasks);
+        setData(data.points);
     };
 
     const pageCallback = (page: number) => {

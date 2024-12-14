@@ -1,7 +1,10 @@
 'use server';
 
-import { fetchGet, fetchPost } from './fetch'
-import { cookies } from 'next/headers'
+import { fetchPost } from './fetch';
+import { cookies } from 'next/headers';
+import { Token } from './serverUtils';
+import { AuthError } from 'next-auth';
+import { signIn as callSignIn, auth } from '@/auth/auth'
 
 export async function regist(
     prevState: string | undefined,
@@ -39,7 +42,7 @@ export async function regist(
     return response;
 }
 
-export async function signIn(
+export async function signInBak(
     prevState: string | undefined,
     formData: FormData,
 ) {
@@ -60,7 +63,7 @@ export async function signIn(
             value: response.data.token,
             httpOnly: true,
             path: '/',
-            maxAge: cookiesTime 
+            maxAge: cookiesTime
         })
 
         cookies().set({
@@ -68,7 +71,7 @@ export async function signIn(
             value: response.data?.userinfo?.uid,
             httpOnly: true,
             path: '/',
-            maxAge: cookiesTime 
+            maxAge: cookiesTime
         })
 
         cookies().set({
@@ -76,7 +79,7 @@ export async function signIn(
             value: response.data?.userinfo?.email,
             httpOnly: true,
             path: '/',
-            maxAge: cookiesTime 
+            maxAge: cookiesTime
         })
         // 清空 token 值不进行返回
         response.data.token = 'none'
@@ -86,9 +89,63 @@ export async function signIn(
     return response
 }
 
+export async function changePassword(
+    prevState: string | undefined,
+    formData: FormData,
+) {
+
+    const token = Token();
+    if (!token) {
+        return null;
+    }
+
+    const Bearer = "Bearer " + token;
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", Bearer);
+
+    // 过滤formData中的数据
+    const formDataFilter = new FormData();
+    formDataFilter.append('old_password', formData.get('old_password') as string);
+    formDataFilter.append('password', formData.get('password') as string);
+    formDataFilter.append('confirm_password', formData.get('confirm_password') as string);
+    formDataFilter.append('captcha_token', formData.get('captcha_token') as string);
+    formDataFilter.append('email_code', formData.get('email_code') as string);
+
+    if (formData.get('password') !== formData.get('confirm_password')) {
+        return { code: 4220, msg: '两次输入的密码不相等' };
+    }
+
+    const response = await fetchPost('api/auth/change-password', formDataFilter, {
+        headers: myHeaders
+    });
+
+    // 请求登录接口
+    return response;
+}
+
 export async function signOut() {
     cookies().delete('token')
 
     // 请求登录接口
     return { code: 200, msg: "退出成功" };
+}
+
+export async function signIn(
+    prevState: string | undefined,
+    formData: FormData,
+) {
+    try {
+        await callSignIn('credentials', formData);
+    } catch (error) {
+        console.log(await auth())
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case 'CredentialsSignin':
+                    return 'Invalid credentials.';
+                default:
+                    return error.message;
+            }
+        }
+        throw error;
+    }
 }

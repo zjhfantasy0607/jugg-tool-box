@@ -6,16 +6,20 @@ import { UserInfo } from '@/store/slices/userinfoSlice'
 import { useEffect, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hook'
 import { cleanUserinfo } from '@/store/slices/userinfoSlice'
-import { progressUp, selectIsEnd } from "@/store/slices/progressSlice"
+import { progressStart, selectIsEnd } from "@/store/slices/progressSlice"
 import { useSpring, animated } from '@react-spring/web'
 import clsx from 'clsx'
 import Link from 'next/link'
+import { useToggleDialog } from "@/store/hook";
+import { setDialogType } from '@/store/slices/dialogSlice';
 
 export default function ({
     userInfo
 }: {
     userInfo: UserInfo
 }) {
+    const toogleDialog = useToggleDialog()
+
     const eleRef = useRef<HTMLUListElement>(null)
     const reduxDispatch = useAppDispatch();
     const isEnd = useAppSelector(selectIsEnd);
@@ -31,7 +35,7 @@ export default function ({
     // 启动任务检查
     useEffect(() => {
         if (userInfo.email) {
-            reduxDispatch(progressUp())
+            reduxDispatch(progressStart())
         }
     }, []);
 
@@ -44,12 +48,17 @@ export default function ({
         if (eleRef.current) {
             eleRef.current.blur()
             // 找到所有可以获得焦点的子元素
-            const focusableElements =  eleRef.current.querySelectorAll('input, button, textarea, select, a[href], [tabindex]');
+            const focusableElements = eleRef.current.querySelectorAll('input, button, textarea, select, a[href], [tabindex]');
             // 遍历并移除焦点
             focusableElements.forEach((el: any) => {
                 (el as HTMLElement).blur();
             });
         }
+    }
+
+    function handleChangePassword() {
+        reduxDispatch(setDialogType("forget"));
+        toogleDialog();
     }
 
     return (
@@ -94,6 +103,7 @@ export default function ({
             <ul ref={eleRef} tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-44 absolute top-full mt-6">
                 <li onClick={dropdownHandleClick}><Link href={`/points/${userInfo.uid}`}>积分记录</Link></li>
                 <li onClick={dropdownHandleClick}><Link href={`/tasks/${userInfo.uid}`}>任务记录</Link></li>
+                <li onClick={dropdownHandleClick}><a onClick={handleChangePassword}>修改密码</a></li>
                 <li onClick={dropdownHandleClick}><a onClick={handleSignOut}>退出登录</a></li>
             </ul>
         </div>

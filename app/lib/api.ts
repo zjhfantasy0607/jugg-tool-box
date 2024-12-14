@@ -9,13 +9,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { promisify } from 'util'
 import { GetRandomNumber } from '@/app/lib/utils'
 import { unstable_noStore as noStore } from 'next/cache'
-import { totalmem } from 'os';
-// import { revalidatePath } from 'next/cache'
+import { isValidKey, Txt2imgParams, RembgParams, Img2imgParams } from '@/app/lib/apiTypes';
+import { Token } from './serverUtils';
 
 const readFile = promisify(fs.readFile);
 const unlink = promisify(fs.unlink);
 
-function Token() {
+export async function TokenToken() {
     return cookies().get('token')?.value || '';
 }
 
@@ -25,10 +25,8 @@ export async function sendEmailCode(email: string, captchaToken: string) {
     formDataFilter.append('email', email);
     formDataFilter.append('captcha_token', captchaToken);
 
-    fetchPost('api/auth/send-email-code', formDataFilter);
-
     // 请求登录接口
-    return { code: 200, msg: "发送成功" };
+    return await fetchPost('api/auth/send-email-code', formDataFilter);
 }
 
 export async function getPuzzle(browserId: string) {
@@ -59,8 +57,6 @@ export async function getPuzzle(browserId: string) {
 
     // 发送到服务器进行记录
     await fetchPost('api/auth/set-captcha', formDataFilter);
-
-    console.log(res)
 
     // 读取文件并转换为Base64
     const bgBuffer = await readFile(bgFilePath);
@@ -134,11 +130,11 @@ export async function countPoints(width: number, height: number, num: number) {
     return await fetchPost('api/img/count-points', formData);
 }
 
-export async function imgResize(imgBase64: string, resize: string) {
+export async function imgResize(initImage: string, resize: number) {
     // 过滤formData中的数据
     const formData = new FormData();
-    formData.append('imgBase64', imgBase64);
-    formData.append('resize', resize);
+    formData.append('init_image', initImage);
+    formData.append('resize', String(resize));
 
     const token = Token();
     if (!token) {
@@ -150,6 +146,81 @@ export async function imgResize(imgBase64: string, resize: string) {
     myHeaders.append("Authorization", Bearer);
 
     const response = await fetchPost('api/img/resize', formData, {
+        headers: myHeaders
+    });
+
+    return response;
+}
+
+export async function txt2img(params: Txt2imgParams) {
+    const token = Token();
+    if (!token) {
+        return null;
+    }
+
+    const Bearer = "Bearer " + token;
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", Bearer);
+
+    // formData
+    const formData = new FormData();
+    for (let key in params) {
+        if (isValidKey(key, params)) {
+            formData.append(key, String(params[key]));
+        }
+    }
+
+    const response = await fetchPost('api/img/txt2img', formData, {
+        headers: myHeaders
+    });
+
+    return response;
+}
+
+export async function rembg(params: RembgParams) {
+    const token = Token();
+    if (!token) {
+        return null;
+    }
+
+    const Bearer = "Bearer " + token;
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", Bearer);
+
+    // formData
+    const formData = new FormData();
+    for (let key in params) {
+        if (isValidKey(key, params)) {
+            formData.append(key, String(params[key]));
+        }
+    }
+
+    const response = await fetchPost('api/img/rembg', formData, {
+        headers: myHeaders
+    });
+
+    return response;
+}
+
+export async function img2img(params: Img2imgParams) {
+    const token = Token();
+    if (!token) {
+        return null;
+    }
+
+    const Bearer = "Bearer " + token;
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", Bearer);
+
+    // formData
+    const formData = new FormData();
+    for (let key in params) {
+        if (isValidKey(key, params)) {
+            formData.append(key, String(params[key]));
+        }
+    }
+
+    const response = await fetchPost('api/img/img2img', formData, {
         headers: myHeaders
     });
 
@@ -211,12 +282,41 @@ export async function getTasks(offset: number, limit: number) {
     })
 
     let result = null
-    
+
     if (response?.code == 200 && response?.data?.tasks?.length > 0) {
         result = response.data
     }
 
     // await new Promise(resolve => setTimeout(resolve, 3000))
+
+    return result
+}
+
+export async function getPoints(offset: number, limit: number) {
+    noStore()
+
+    const token = Token()
+    if (!token) {
+        return null
+    }
+
+    const Bearer = "Bearer " + token
+    const myHeaders = new Headers()
+    myHeaders.append("Authorization", Bearer)
+
+    const formData = new FormData();
+    formData.append('offset', offset.toString())
+    formData.append('limit', limit.toString())
+
+    const response = await fetchPost('api/points', formData, {
+        headers: myHeaders,
+    })
+
+    let result = null
+
+    if (response?.code == 200 && response?.data?.points?.length > 0) {
+        result = response.data
+    }
 
     return result
 }

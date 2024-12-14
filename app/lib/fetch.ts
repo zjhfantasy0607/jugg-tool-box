@@ -17,7 +17,7 @@ export const fetchDefault = async (uri: string, options: FetchOptions = {}): Pro
         return response.json();
     } catch (error: any) {
         if (error.name == 'TypeError' && error.message == 'fetch failed') {
-            return { code: -1, msg: '服务器连接失败，请检查网络', data: null };
+            return { code: -1, msg: '连接服务器出错', data: null };
         } else {
             return JSON.parse(error.message);
         }

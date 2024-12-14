@@ -1,7 +1,7 @@
 'use client'
 
 import { Task } from '@/store/slices/progressSlice'
-import { useSpring, animated, SpringValue, config } from '@react-spring/web'
+import { useSpring, animated } from '@react-spring/web'
 import React from 'react'
 
 interface NewTask extends Task {
@@ -12,8 +12,8 @@ export default function Progress({ task }: { task: NewTask }) {
   const isPending = (task.status == 'pending')
 
   // 框加载动画
-  const [styles, api] = useSpring(() => ({ height: 0, opacity: 0 }))
-  if (task.status !== undefined) {
+  const [styles, api] = useSpring(() => ({ height: 0, opacity: 0, }))
+  if (task?.status == "producing" || isPending) {
     api.start({ height: 102, opacity: 1 })
   } else {
     api.start({ height: 0, opacity: 0 })
@@ -31,12 +31,12 @@ export default function Progress({ task }: { task: NewTask }) {
   })
 
   return (
-    <animated.div className="flex mt-5 justify-center px-5 overflow-hidden" style={styles}>
-      <animated.div className="w-[32rem] m-0 h-[62px] bg-card rounded-lg border border-input py-2 px-6" >
+    <animated.div className="w-full flex mt-5 justify-center overflow-hidden" style={styles}>
+      <animated.div className="w-full h-[62px] bg-card rounded-lg border border-input py-2 px-6" >
         <div className="flex justify-between">
           <span className="text-sm">{isPending ? '等待GPU服务器...' : '生成中...'}</span>
           {/*isPending && <Rank props={props} />*/}
-          {isPending && <div>总 {task.totalRank.toString()} 人 /  第 {task.rank.toString()} 位 </div>}
+          {isPending && <div>第 {task.rank.toString()} 位 / 总 {task.totalRank.toString()} 人</div>}
           {!isPending && <animated.span className="text-sm">{props.progress.to(v => `${v.toFixed(0)}%`)}</animated.span>}
         </div>
         <div>
@@ -49,26 +49,5 @@ export default function Progress({ task }: { task: NewTask }) {
         </div>
       </animated.div>
     </animated.div>
-  )
-}
-
-function Rank({
-  props,
-}: {
-  props: {
-    progress: SpringValue<number>
-    rank: SpringValue<number>
-    totalRank: SpringValue<number>
-  }
-}) {
-  return (
-    <div>
-      <animated.span className="text-sm">
-        {props.rank.to(v => `总 ${v.toFixed(0)} 人 / `)}
-      </animated.span>
-      <animated.span className="text-sm">
-        {props.totalRank.to(v => ` 第 ${v.toFixed(0)} 位`)}
-      </animated.span>
-    </div>
   )
 }

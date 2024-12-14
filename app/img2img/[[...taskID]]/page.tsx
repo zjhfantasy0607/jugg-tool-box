@@ -1,4 +1,4 @@
-import Client from "./client";
+import Client from "./client"
 import { getTask } from "@/app/lib/api"
 
 export default async function ({ params }: { params: { taskID: string[] } }) {
@@ -6,7 +6,14 @@ export default async function ({ params }: { params: { taskID: string[] } }) {
 
     let inputImg = '';
     let outputImgs = [];
-    let inputParams = { resize: 2 };
+    let inputParams = {
+        width: 896,
+        height: 1152,
+        prompt: '',
+        negative_prompt: '',
+        seed: -1,
+        input_image: ''
+    };
 
     if (queryTaskId) {
         const response = await getTask(queryTaskId)

@@ -36,7 +36,7 @@ export default function () {
             toogleDialog() // 关闭注册窗口
         } else {
             // 人机验证失败时重置人机验证状态
-            if (response.msg === '人机验证失败') {
+            if (response.msg === '验证码错误') {
                 reduxDispatch(setCaptchaToken({ key: 'regist', val: '' }))
             }
             toast.error(response?.msg)
@@ -90,12 +90,17 @@ export default function () {
     }
 
     // 发送邮件
-    function callSendEmailCode(email: string, token: string) {
+    async function callSendEmailCode(email: string, token: string) {
         // 发送验证码
-        sendEmailCode(email, token)
+        const resp = await sendEmailCode(email, token)
         // 禁用发送按钮
         disabledSendEmail(60)
-        toast.success("已发送邮件")
+
+        if (resp?.code == 200) {
+            toast.success("已发送邮件")
+        } else if (resp?.code) {
+            toast.error(resp?.msg || "未知错误")
+        }
     }
 
     // 设置发送邮箱验证码为禁用
