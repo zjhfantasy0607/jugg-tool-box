@@ -1,7 +1,7 @@
 import Client from "./client"
 import { getTask } from "@/app/lib/api"
 
-export default async function ({ params }: { params: { taskID: string[] } }) {
+export default async function Img2img ({ params }: { params: { taskID: string[] } }) {
     const queryTaskId = (params.taskID && params.taskID[0]) || '';
 
     let inputImg = '';
@@ -25,7 +25,7 @@ export default async function ({ params }: { params: { taskID: string[] } }) {
         }
         if (response.data.task?.source) {
             const source = JSON.parse(response.data.task.source)[0] || ''
-            inputImg = "/images/upload/" + source.replace(/\\/g, '/')
+            inputImg = source.replace(/\\/g, '/')
         }
         if (response.data.task?.params) {
             inputParams = JSON.parse(response.data.task.params) || {}

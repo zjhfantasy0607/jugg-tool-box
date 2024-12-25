@@ -2,7 +2,7 @@
 
 import { signOut } from '@/app/lib/actions'
 import toast from 'react-hot-toast'
-import { UserInfo } from '@/store/slices/userinfoSlice'
+import { UserInfo as UserinfoType } from '@/store/slices/userinfoSlice'
 import { useEffect, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hook'
 import { cleanUserinfo } from '@/store/slices/userinfoSlice'
@@ -13,10 +13,10 @@ import Link from 'next/link'
 import { useToggleDialog } from "@/store/hook";
 import { setDialogType } from '@/store/slices/dialogSlice';
 
-export default function ({
+export default function Userinfo({
     userInfo
 }: {
-    userInfo: UserInfo
+    userInfo: UserinfoType
 }) {
     const toogleDialog = useToggleDialog()
 
@@ -37,7 +37,7 @@ export default function ({
         if (userInfo.email) {
             reduxDispatch(progressStart())
         }
-    }, []);
+    }, [reduxDispatch, userInfo.email]);
 
     const props = useSpring({
         points: userInfo.points,

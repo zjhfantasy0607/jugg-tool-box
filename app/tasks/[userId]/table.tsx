@@ -7,6 +7,8 @@ import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { selectTasks, Task as ProgressTask, TaskStatus } from "@/store/slices/progressSlice"
 import Image from 'next/image'
 
+const outputPath = process.env.NEXT_PUBLIC_OUTPUT_PATH as string;
+
 export default function Table({
     tableData
 }: {
@@ -130,7 +132,7 @@ const Tr = React.memo(({
             </td>
             <td className='w-20 h-14 lg:h-16 !px-2 !py-1'>
                 <div className='w-full h-full relative overflow-hidden'>
-                    {output && <Image className='m-auto object-contain' fill priority src={"/images/output/thumb/" + output} sizes="(max-width: 60px) 100vw" alt={""} />}
+                    {output && <Image className='m-auto object-contain' fill priority src={outputPath + output} sizes="(max-width: 60px) 100vw" alt={""} />}
                 </div>
             </td>
             <th className="w-10">
@@ -143,6 +145,7 @@ const Tr = React.memo(({
         </tr>
     )
 })
+Tr.displayName = 'TaskTableRow'
 
 const HandleTooltip = async (e: React.MouseEvent<HTMLDivElement>) => {
     // 获取被点击的元素

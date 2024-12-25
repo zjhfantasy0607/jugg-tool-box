@@ -1,15 +1,16 @@
 'use client'
 
 import clsx from "clsx"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useCallback, useRef } from "react"
 import toast from 'react-hot-toast'
 import { selectUserinfo } from "@/store/slices/userinfoSlice"
 import { useAppSelector } from "@/store/hook"
 import { countPoints } from "@/app/lib/api"
 import Upload from "@/app/ui/upload"
-import path from 'path'
+import { FetchImg } from "@/app/lib/utils";
 
 const MAX_FILE_SIZE_MB = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_MB);
+const uploadPath = process.env.NEXT_PUBLIC_UPLOAD_PATH as string;
 
 function Workbench({
   uploadCallback,
@@ -30,36 +31,10 @@ function Workbench({
 
   const resizeNums = [1, 1.5, 2, 2.5, 3];
   const [resize, setResize] = useState<number>(inputParams.resize);
+  const resizeRef = useRef<number>(0);
 
   const [imgFile, setImgFile] = useState<File | null>(null);
   const [imgbase64, setImgbase64] = useState<string>(inputImg);
-
-  // 上传图片后的处理
-  function setFile(file: File) {
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      toast.error(`文件大小不能超过${MAX_FILE_SIZE_MB}mb`)
-      return;
-    }
-
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onloadend = () => {
-      const img = new Image()
-      const imgurl = reader.result as string
-      img.src = imgurl
-      img.onload = async () => { // 加载图片获取分辨率
-        setImgFile(file);
-        setImgbase64(imgurl);
-        setWidth(img.width);
-        setHeight(img.height);
-
-        const response = await countPoints(img.width * resize, img.height * resize, 1) // 计算需要消耗的点数
-        if (response?.code == 200) {
-          setPoints(response?.data?.points)
-        }
-      }
-    }
-  }
 
   // 图片比例修改
   async function handleResizeChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -97,28 +72,51 @@ function Workbench({
     await submitCallback(imgbase64, resize)
   }
 
-  // 抓取网络图片，放入上传栏
-  async function fetchUrlImg(url: string) {
-    try {
-      const response = await fetch(url)
-      const blob = await response.blob()
-      const fileName = path.basename(url)
-      const file = new File([blob], fileName, { type: blob.type })
-      setFile(file)
-    } catch (error) {
-      console.log(error)
+  useEffect(() => {
+    resizeRef.current = resize;
+  }, [resize]);
+
+  // 上传图片后的处理
+  const setFile = useCallback((file: File) => {
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error(`文件大小不能超过${MAX_FILE_SIZE_MB}mb`)
+      return;
     }
-  }
+
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onloadend = () => {
+      const img = new Image()
+      const imgurl = reader.result as string
+      img.src = imgurl
+      img.onload = async () => { // 加载图片获取分辨率
+        setImgFile(file);
+        setImgbase64(imgurl);
+        setWidth(img.width);
+        setHeight(img.height);
+        const response = await countPoints(img.width * resizeRef.current, img.height * resizeRef.current, 1) // 计算需要消耗的点数
+        if (response?.code == 200) {
+          setPoints(response?.data?.points)
+        }
+      }
+    }
+  }, []);
 
   // 默认id存在展示原图情形
   useEffect(() => {
-    if (inputImg) {
-      fetchUrlImg(inputImg)
+    if (!inputImg) {
+      return
     }
-  }, [])
+    (async () => {
+      const file = await FetchImg(uploadPath + inputImg);
+      if (file) {
+        setFile(file);
+      }
+    })();
+  }, [setFile, inputImg]);
 
   return (
-    <div className="bg-card rounded-md border border-input p-6">
+    <div className="bg-card rounded-md border border-input p-6 bg-white">
       {/* 图片上传区域 */}
       <div className="h-32 md:h-40">
         <Upload preview={imgbase64} file={imgFile} uploadCallback={(file) => { uploadCallback(); setFile(file); }} />

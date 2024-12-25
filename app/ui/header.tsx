@@ -7,7 +7,7 @@ import Dialog from "./header/dialog";
 
 export default function Header() {
     return (
-        <div className="navbar bg-primary-content h-16 shadow z-10 absolute inset-0">
+        <div className="navbar bg-primary-content h-16 shadow relative z-10">
             <div className="flex-none text-primary">
                 <SidebarButton />
             </div>

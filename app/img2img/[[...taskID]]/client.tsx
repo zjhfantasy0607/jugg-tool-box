@@ -11,9 +11,7 @@ import { updateUserinfo } from "@/store/slices/userinfoSlice";
 import { selectTask, selectTotalRank, progressStart } from "@/store/slices/progressSlice";
 import toast from "react-hot-toast";
 
-const outputPath = process.env.NEXT_PUBLIC_OUTPUT_PATH as string
-
-export default function ({
+export default function Client({
   defTaskId, defInputImg, defOutputImgs, defInputParams
 }: {
   defTaskId: string, defInputImg: string, defOutputImgs: string[], defInputParams: Img2imgParams
@@ -26,8 +24,6 @@ export default function ({
   const task = useAppSelector(state => selectTask(state, taskId));
   const totalRank = useAppSelector(selectTotalRank);
   const statusRef = useRef<string>(task?.status);
-
-  console.log()
 
   useEffect(() => {
     // 配合statusRef 避免 完成任务 在不符合的场景显示出来
@@ -47,7 +43,7 @@ export default function ({
     } else if (task?.status === "failed") {
       toast.error("任务失败，已返还积分");
     }
-  }, [task]);
+  }, [task, defTaskId, taskId]);
 
   const submitCallback = useCallback(async (params: Img2imgParams) => {
     const response = await img2img(params);
@@ -80,13 +76,13 @@ export default function ({
     setOutputImgs([]) // 清空生成结果
   }, []);
 
-  return <div className="relative w-[40rem] lg:h-auto h-screen max-w-full mx-auto px-5 overflow-hidden">
+  return <div className="relative w-[40rem] lg:h-auto h-screen max-w-full mx-auto px-5">
     <Workbench submitCallback={submitCallback} uploadCallback={uploadCallback} inputParams={inputParams} inputImg={defInputImg} />
 
     {/* 进度条 */}
     <Progress task={{ ...task, totalRank: totalRank }} />
 
     {/* 生成结果展示 */}
-    {outputImgs.map((item, index) => <Output key={index} output={outputPath + item} />)}
+    {outputImgs.map((item, index) => <Output key={index} output={item.replace(/\\/g, '/')} />)}
   </div>
 }

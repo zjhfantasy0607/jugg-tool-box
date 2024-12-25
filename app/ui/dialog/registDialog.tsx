@@ -1,64 +1,27 @@
 'use client'
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import clsx from 'clsx';
 import { regist } from '@/app/lib/actions';
 import { sendEmailCode } from '@/app/lib/api';
-
 import { useAppSelector, useAppDispatch, useToggleDialog } from '@/store/hook';
 import { setUserinfo } from '@/store/slices/userinfoSlice';
 import { setDialogType, selectCaptchaToken, setCaptchaToken } from '@/store/slices/dialogSlice';
+import { toggleIsShow } from '@/store/slices/dialogSlice';
 
-export default function () {
+export default function RegistDialog() {
     const reduxDispatch = useAppDispatch();
-    const toogleDialog = useToggleDialog();
 
     const captchaToken = useAppSelector(state => selectCaptchaToken(state, "regist")) || ''
 
     const [email, setEmail] = useState<string>('');
     const [isDisabled, setIsDisabled] = useState<number>(0);
+    const [isSending, setIsSending] = useState<boolean>(false);
     const [response, dispatch] = useFormState(regist, undefined);
 
     const formRef = useRef<HTMLFormElement>(null);  // 创建表单引用
     const captcahFrom = useRef<string>('');  // 记录人机验证触发起来的位置
-
-    useEffect(() => {
-        if (!response) return
-        if (response?.code == 200 && response?.data?.token) {
-            toast.success('注册成功，已自动登录')
-            // 设置登录后的用户信息状态
-            const userinfo = response.data.userifo
-            reduxDispatch((setUserinfo(userinfo)))
-            // 重置登录卡片
-            formRef?.current?.reset() // 重置表单状态
-            toogleDialog() // 关闭注册窗口
-        } else {
-            // 人机验证失败时重置人机验证状态
-            if (response.msg === '验证码错误') {
-                reduxDispatch(setCaptchaToken({ key: 'regist', val: '' }))
-            }
-            toast.error(response?.msg)
-        }
-
-    }, [response])
-
-    useEffect(() => {
-        if (!captchaToken) return
-
-        if (captcahFrom.current === 'sendCode') { // 人机验证成功后自动触发发送邮件
-            callSendEmailCode(email, captchaToken)
-        } else if (captcahFrom.current === 'submit') { // 人机验证成功后自动触发提交表单
-            // 触发表单提交
-            formRef?.current?.requestSubmit()
-        }
-
-        setTimeout( // 两分钟后token过期, 清除token
-            () => reduxDispatch(setCaptchaToken({ key: 'regist', val: '' })),
-            (1000 * 60 * 2)
-        )
-    }, [captchaToken])
 
     function handleChangeEmail(event: React.ChangeEvent<HTMLInputElement>) {
         setEmail(event.target.value);
@@ -90,18 +53,57 @@ export default function () {
     }
 
     // 发送邮件
-    async function callSendEmailCode(email: string, token: string) {
+    const callSendEmailCode = useCallback(async (email: string, token: string) => {
+        //请求前禁用发送按钮
+        setIsSending(true);
         // 发送验证码
         const resp = await sendEmailCode(email, token)
         // 禁用发送按钮
-        disabledSendEmail(60)
+        disabledSendEmail(60);
+        setIsSending(false);
 
         if (resp?.code == 200) {
             toast.success("已发送邮件")
         } else if (resp?.code) {
             toast.error(resp?.msg || "未知错误")
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        if (!response) return
+        if (response?.code == 200 && response?.data?.token) {
+            toast.success('注册成功，已自动登录')
+            // 设置登录后的用户信息状态
+            const userinfo = response.data.userinfo;
+            reduxDispatch((setUserinfo(userinfo)))
+            // 重置登录卡片
+            formRef?.current?.reset(); // 重置表单状态
+            reduxDispatch(toggleIsShow()); // 关闭登录窗口
+        } else {
+            // 人机验证失败时重置人机验证状态
+            if (response.msg === '验证码错误') {
+                reduxDispatch(setCaptchaToken({ key: 'regist', val: '' }))
+            }
+            toast.error(response?.msg)
+        }
+
+    }, [response, reduxDispatch]);
+
+    useEffect(() => {
+        if (!captchaToken) return
+
+        if (captcahFrom.current === 'sendCode') { // 人机验证成功后自动触发发送邮件
+            callSendEmailCode(email, captchaToken)
+        } else if (captcahFrom.current === 'submit') { // 人机验证成功后自动触发提交表单
+            // 触发表单提交
+            formRef?.current?.requestSubmit()
+        }
+
+        setTimeout( // 两分钟后token过期, 清除token
+            () => reduxDispatch(setCaptchaToken({ key: 'regist', val: '' })),
+            (1000 * 60 * 2)
+        )
+    }, [captchaToken, callSendEmailCode, email, reduxDispatch]);
 
     // 设置发送邮箱验证码为禁用
     function disabledSendEmail(time: number) {
@@ -146,8 +148,8 @@ export default function () {
                         </label>
                         <label className='flex justify-between'>
                             <input type="text" name="email_code" placeholder="邮箱验证码" className="input input-bordered w-[55%]" maxLength={6} />
-                            <button type="button" disabled={isDisabled > 0} className="btn btn-primary w-[45%]" onClick={handleSendCode}>
-                                {isDisabled > 0 ? `${isDisabled}s 后重试` : '发送验证码'}
+                            <button type="button" disabled={isDisabled > 0 || isSending} className="btn btn-primary w-[45%]" onClick={handleSendCode}>
+                                {isSending ? '发送中...' : isDisabled > 0 ? `${isDisabled}s 后重试` : '发送验证码'}
                             </button>
                         </label>
                         <label className="label">

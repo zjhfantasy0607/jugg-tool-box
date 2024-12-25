@@ -5,41 +5,39 @@ import { use, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { signIn } from '@/app/lib/actions';
 
-import { useAppSelector, useAppDispatch, useToggleDialog } from '@/store/hook';
+import { useAppSelector, useAppDispatch } from '@/store/hook';
 import { setDialogType, selectCaptchaToken, setCaptchaToken } from '@/store/slices/dialogSlice';
+import { setUserinfo } from '@/store/slices/userinfoSlice';
+import { toggleIsShow } from '@/store/slices/dialogSlice';
 
-export default function () {
-    const reduxDispatch = useAppDispatch()
-    const toogleDialog = useToggleDialog()
+export default function LoginDialog() {
+    const reduxDispatch = useAppDispatch();
 
     const captcahFrom = useRef<string>('');  // 记录人机验证触发起来的位置
     const captchaToken = useAppSelector(state => selectCaptchaToken(state, "login")) || '';
-
     const [response, dispatch] = useFormState(signIn, undefined);
     const formRef = useRef<HTMLFormElement>(null);
 
-    console.log(response)
-
     useEffect(() => {
-        // if (!response) return
-        // if (response?.code == 200 && response?.data?.token) {
-        //     toast.success('欢迎登录 ^_^')
-        //     // 更新全局用户信息
-        //     const userinfo = response.data.userinfo
-        //     reduxDispatch((setUserinfo(userinfo)))
-        //     // 重置登录卡片
-        //     formRef?.current?.reset() // 重置表单状态
-        //     toogleDialog() // 关闭登录窗口
-        //     // 检查任务队列
-        // } else {
-        //     // 人机验证失败时重置验证码token
-        //     if (response?.msg === '验证码错误') {
-        //         // 清除当前token
-        //         reduxDispatch(setCaptchaToken({ key: 'login', val: '' }))
-        //     }
-        //     toast.error(response?.msg)
-        // }
-    }, [response])
+        if (!response) return
+        if (response?.code == 200 && response?.data?.token) {
+            toast.success('欢迎登录 ^_^')
+            // 更新全局用户信息
+            const userinfo = response.data.userinfo
+            reduxDispatch((setUserinfo(userinfo)))
+            // 重置登录卡片
+            formRef?.current?.reset() // 重置表单状态
+            reduxDispatch(toggleIsShow()) // 关闭登录窗口
+            // 检查任务队列
+        } else {
+            // 人机验证失败时重置验证码token
+            if (response?.msg === '验证码错误') {
+                // 清除当前token
+                reduxDispatch(setCaptchaToken({ key: 'login', val: '' }))
+            }
+            toast.error(response?.msg)
+        }
+    }, [response, reduxDispatch])
 
     useEffect(() => {
         // 人机验证完成后自动提交
@@ -51,7 +49,7 @@ export default function () {
                 (1000 * 60 * 2)
             )
         }
-    }, [captchaToken])
+    }, [captchaToken, reduxDispatch])
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         // 无人机验证token时，阻止表单默认提交行为，触发人机验证token

@@ -11,15 +11,13 @@ import { imgResize } from "@/app/lib/api"
 import { ResizeParams } from "@/app/lib/apiTypes"
 import toast from "react-hot-toast"
 
-const outputPath = process.env.NEXT_PUBLIC_OUTPUT_PATH as string
-
-export default function ({
+export default function Client({
   defTaskId, defInputImg, defOutputImgs, defInputParams
 }: {
   defTaskId: string, defInputImg: string, defOutputImgs: string[], defInputParams: ResizeParams
 }) {
   const [taskID, setTaskID] = useState<string>(defTaskId);
-  const [inputImg, setInputImg] = useState<string>(defInputImg);
+  const [inputImg, setInputImg] = useState<string>('');
   const [output, setOutput] = useState<string[]>(defOutputImgs);
 
   const reduxDispatch = useAppDispatch();
@@ -41,12 +39,12 @@ export default function ({
     } else if (task?.status === "failed") {
       toast.error("任务失败，已返还积分");
     }
-  }, [task]);
+  }, [task, defTaskId, taskID]);
 
   const uploadCallback = useCallback(() => {
     setTaskID('') // 清空当前任务Id
     setOutput([]) // 清空生成结果
-  }, [])
+  }, [setTaskID, setOutput])
 
   const submitCallback = useCallback(async (inputImg: string, resize: number) => {
     const response = await imgResize(inputImg, resize);
@@ -83,7 +81,7 @@ export default function ({
       <Progress task={{ ...task, totalRank: totalRank }} />
 
       {/* 生成结果展示 */}
-      {output.map((item, index) => <Output key={index} origin={inputImg} output={outputPath + item} />)}
+      {output.map((item, index) => <Output key={index} origin={inputImg} output={item.replace(/\\/g, '/')} />)}
     </div>
   );
 }

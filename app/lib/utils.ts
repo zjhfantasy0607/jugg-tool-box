@@ -1,3 +1,5 @@
+import path from "path";
+
 // 设置全局的控制侧边栏显示方法
 export function ToggleGlobalSidebar() {
     const lgWidth = 1024;
@@ -24,4 +26,17 @@ export function GetFormattedDateTime() {
     const seconds = String(now.getSeconds()).padStart(2, '0');
 
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+export async function FetchImg(url: string) {
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const fileName = path.basename(url);
+        const file = new File([blob], fileName, { type: blob.type });
+        return file;
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
 }

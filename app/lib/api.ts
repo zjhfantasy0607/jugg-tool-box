@@ -261,6 +261,24 @@ export async function getTask(taskId: string) {
     return response;
 }
 
+export async function getTasksInHome(limit: number, offset: number = 0) {
+    noStore()
+
+    const formData = new FormData();
+    formData.append('offset', offset.toString())
+    formData.append('limit', limit.toString())
+
+    const response = await fetchPost('api/tasks/home', formData)
+
+    let result = null;
+
+    if (response?.code == 200 && response?.data?.tasks?.length > 0) {
+        result = response.data
+    }
+
+    return result
+}
+
 export async function getTasks(offset: number, limit: number) {
     noStore()
 
@@ -319,4 +337,10 @@ export async function getPoints(offset: number, limit: number) {
     }
 
     return result
+}
+
+export async function getSeo(url: string) {
+    const formData = new FormData();
+    formData.append('url', url);
+    return await fetchPost('api/seo', formData);
 }

@@ -9,6 +9,10 @@ const config: Config = {
   safelist: [
     'size-5',
     'text-green-500',
+    'text-[#eedb95]',
+    'text-[#de7660]',
+    'text-[#7891b1]',
+    'text-[#f5bfc8]'
   ],
   theme: {
     extend: {

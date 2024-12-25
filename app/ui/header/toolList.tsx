@@ -1,8 +1,9 @@
 import Link from "next/link";
 
-import Search from "./search";
+import Search from "../search";
 import ToolListChild from "./toolListChild";
 import { getToolsTree } from "@/app/lib/api";
+import { ToolTree, Tool } from "@/app/lib/apiTypes";
 
 export default async function ToolList() {
 
@@ -23,25 +24,4 @@ export default async function ToolList() {
             {toolTree?.data?.tools.map((item: Tool) => <ToolListChild key={item.id} tool={item} />)}
         </ul>
     );
-}
-
-export interface Tool {
-    id: number
-    pid: number
-    title: string
-    icon: string
-    url: string
-    created_at: string
-    updated_at: string
-    Orders: number
-    Tool: string
-    children?: Tool[]
-}
-
-export interface ToolTree {
-    code: number;
-    data: {
-        tools: Tool[];
-    };
-    msg: string;
 }

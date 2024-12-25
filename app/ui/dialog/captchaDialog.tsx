@@ -8,7 +8,7 @@ import { useAppSelector, useAppDispatch, useToggleDialog } from '@/store/hook';
 import { selectBrowserId } from '@/store/slices/userinfoSlice';
 import { selectPrevDialogType, setCaptchaToken } from '@/store/slices/dialogSlice';
 
-export default function () {
+export default function CaptchaDialog() {
 
     const toogleDialog = useToggleDialog()
     const dispatch = useAppDispatch()

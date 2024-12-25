@@ -10,7 +10,7 @@ import CaptchaDialog from "@/app/ui/dialog/captchaDialog";
 import { useAppSelector, useToggleDialog } from "@/store/hook";
 import { selectShow, selectDialogType } from "@/store/slices/dialogSlice";
 
-export default function () {
+export default function Dialog() {
     const toogleDialog = useToggleDialog()
     
     const dialogType = useAppSelector(selectDialogType)

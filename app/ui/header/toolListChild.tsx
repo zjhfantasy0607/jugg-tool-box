@@ -1,17 +1,17 @@
 'use client'
 
-import Link from "next/link"
-import { ToggleGlobalSidebar } from "@/app/lib/utils"
-import { Tool } from "@/app/ui/toolList"
-import { usePathname } from 'next/navigation'
-import clsx from "clsx"
+import Link from "next/link";
+import { ToggleGlobalSidebar } from "@/app/lib/utils";
+import { Tool } from "@/app/lib/apiTypes";
+import { usePathname } from 'next/navigation';
+import clsx from "clsx";
 
 export default function ToolListChild({
     tool
 }: {
     tool: Tool
 }) {
-    const pathname = usePathname()
+    const pathname = usePathname();
 
     return (
         <li>
@@ -23,7 +23,7 @@ export default function ToolListChild({
                 <ul>
                     {tool.children?.map((item: Tool) =>
                         <li key={item.id}>
-                            <Link className={clsx({ active: pathname === item.url })} onClick={ToggleGlobalSidebar} href={item.url}>
+                            <Link className={clsx({ active: pathname.startsWith(item.url) })} onClick={ToggleGlobalSidebar} href={item.url}>
                                 <span className="text-sm">{item.title}</span>
                             </Link>
                         </li>)}

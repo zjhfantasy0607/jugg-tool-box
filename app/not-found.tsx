@@ -11,7 +11,6 @@ export default function NotFound() {
       alignItems: 'center',
       justifyContent: 'center',
       color: '#000',
-      background: '#fff',
       margin: 0,
     }}>
       <style>{`

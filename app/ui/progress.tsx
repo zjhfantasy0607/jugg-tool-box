@@ -32,7 +32,7 @@ export default function Progress({ task }: { task: NewTask }) {
 
   return (
     <animated.div className="w-full flex mt-5 justify-center overflow-hidden" style={styles}>
-      <animated.div className="w-full h-[62px] bg-card rounded-lg border border-input py-2 px-6" >
+      <animated.div className="w-full h-[62px] bg-card rounded-lg border border-input py-2 px-6 bg-white" >
         <div className="flex justify-between">
           <span className="text-sm">{isPending ? '等待GPU服务器...' : '生成中...'}</span>
           {/*isPending && <Rank props={props} />*/}

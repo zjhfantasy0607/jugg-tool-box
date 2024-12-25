@@ -21,10 +21,13 @@ export default function Workbench({
     const [points, setPoints] = useState<number>(0)
     const [FormState, setFormState] = useState<Txt2imgParams>(inputParams);
 
-    useEffect(() => {
-        setFormState(inputParams);
-        updatePoints();
-    }, [inputParams])
+    const updatePoints = useDebouncedCallback(async () => {
+        const pointsMagnification: number = Math.floor(FormState.prompt.length * 0.008) + 1;
+        const response = await countPoints(FormState.width, FormState.height, pointsMagnification) // 计算需要消耗的点数
+        if (response?.code == 200) {
+            setPoints(response?.data?.points)
+        }
+    }, 600)
 
     const handleChangeForm = (e: any) => {
         const { name, value } = e.target;
@@ -72,27 +75,24 @@ export default function Workbench({
         await submitCallback(FormState);
     }
 
-    const updatePoints = useDebouncedCallback(async () => {
-        const pointsMagnification: number = Math.floor(FormState.prompt.length * 0.008) + 1;
-        const response = await countPoints(FormState.width, FormState.height, pointsMagnification) // 计算需要消耗的点数
-        if (response?.code == 200) {
-            setPoints(response?.data?.points)
-        }
-    }, 600)
+    useEffect(() => {
+        setFormState(inputParams);
+        updatePoints();
+    }, [updatePoints, inputParams]);
 
     return (
-        <div className="w-full flex justify-center transition-all duration-300 my-5">
+        <div className="w-full flex justify-center transition-all duration-300 my-5 bg-white">
             <form ref={formRef} id="txt2img-form" className="w-full bg-card rounded-md border border-input p-6 pt-3 flex flex-col md:flex-row md:space-x-4">
                 <div className="flex-1 space-y-3">
                     <div className="form-control ">
                         <label className="label">
                             <span className="label-text text-md">提示词</span>
                         </label>
-                        <textarea 
-                            value={FormState.prompt} 
-                            onChange={handleChangeForm} 
-                            name="prompt" 
-                            className="bg-gray-100 rounded-xs px-2 py-1 placeholder-gray-500 textarea textarea-bordered h-24 leading-tight" 
+                        <textarea
+                            value={FormState.prompt}
+                            onChange={handleChangeForm}
+                            name="prompt"
+                            className="bg-gray-100 rounded-xs px-2 py-1 placeholder-gray-500 textarea textarea-bordered h-24 leading-tight"
                             placeholder="输入提示词..."></textarea>
                     </div>
 

@@ -11,15 +11,13 @@ import { rembg } from "@/app/lib/api"
 import { RembgParams } from "@/app/lib/apiTypes"
 import toast from "react-hot-toast"
 
-const outputPath = process.env.NEXT_PUBLIC_OUTPUT_PATH as string
-
-export default function ({
+export default function Client({
   defTaskId, defInputImg, defOutputImgs, defInputParams
 }: {
   defTaskId: string, defInputImg: string, defOutputImgs: string[], defInputParams: RembgParams
 }) {
-  const [taskId, setTaskId] = useState<string>(defTaskId)
-  const [outputImgs, setOutputImgs] = useState<string[]>(defOutputImgs)
+  const [taskId, setTaskId] = useState<string>(defTaskId);
+  const [outputImgs, setOutputImgs] = useState<string[]>(defOutputImgs);
 
   const reduxDispatch = useAppDispatch()
   const task = useAppSelector(state => selectTask(state, taskId));
@@ -40,7 +38,7 @@ export default function ({
     } else if (task?.status === "failed") {
       toast.error("任务失败，已返还积分");
     }
-  }, [task]);
+  }, [task, defTaskId, taskId]);
 
   const uploadCallback = useCallback(() => {
     setTaskId('') // 清空当前任务Id
@@ -80,7 +78,7 @@ export default function ({
       <Progress task={{ ...task, totalRank: totalRank }} />
 
       {/* 生成结果展示 */}
-      {outputImgs.map((item, index) => <Output key={index} output={outputPath + item} />)}
+      {outputImgs.map((item, index) => <Output key={index} output={item.replace(/\\/g, '/')} />)}
     </div>
   );
 }

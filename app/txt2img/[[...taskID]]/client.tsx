@@ -11,9 +11,7 @@ import { updateUserinfo } from "@/store/slices/userinfoSlice";
 import { selectTask, selectTotalRank, progressStart } from "@/store/slices/progressSlice";
 import toast from "react-hot-toast";
 
-const outputPath = process.env.NEXT_PUBLIC_OUTPUT_PATH as string
-
-export default function ({
+export default function Client({
   defTaskId, defOutputImgs, defInputParams
 }: {
   defTaskId: string, defOutputImgs: string[], defInputParams: Txt2imgParams
@@ -47,7 +45,7 @@ export default function ({
     } else if (task?.status === "failed") {
       toast.error("任务失败，已返还积分");
     }
-  }, [task]);
+  }, [task, defTaskId, taskId]);
 
   const submitCallback = useCallback(async (config: Txt2imgParams) => {
     const response = await txt2img(config);
@@ -75,13 +73,13 @@ export default function ({
     }
   }, [reduxDispatch]);
 
-  return <div className="relative w-[40rem] lg:h-auto h-screen max-w-full mx-auto px-5 overflow-hidden">
+  return <div className="relative w-[40rem] lg:h-auto h-screen max-w-full mx-auto px-5 overflow-hidde">
     <Workbench submitCallback={submitCallback} inputParams={inputParams} />
 
     {/* 进度条 */}
     <Progress task={{ ...task, totalRank: totalRank }} />
 
     {/* 生成结果展示 */}
-    {outputImgs.map((item, index) => <Output key={index} output={outputPath + item} />)}
+    {outputImgs.map((item, index) => <Output key={index} output={item.replace(/\\/g, '/')} />)}
   </div>
 }

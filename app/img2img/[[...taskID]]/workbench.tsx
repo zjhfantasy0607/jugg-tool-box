@@ -1,16 +1,17 @@
 'use client'
 
 import { Img2imgParams, isValidKey } from "@/app/lib/apiTypes";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { selectUserinfo } from "@/store/slices/userinfoSlice";
 import { useAppSelector } from "@/store/hook";
 import toast from "react-hot-toast";
 import { countPoints } from "@/app/lib/api";
 import Upload from "@/app/ui/upload"
 import { useDebouncedCallback } from 'use-debounce';
-import path from 'path'
+import { FetchImg } from "@/app/lib/utils";
 
 const MAX_FILE_SIZE_MB = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_MB);
+const uploadPath = process.env.NEXT_PUBLIC_UPLOAD_PATH as string;
 
 export default function Workbench({
     uploadCallback,
@@ -30,31 +31,6 @@ export default function Workbench({
     const [FormState, setFormState] = useState<Img2imgParams>(inputParams);
     const [imgbase64, setImgbase64] = useState<string>('');
     const [imgFile, setImgFile] = useState<File | null>(null);
-
-    // 上传图片后的处理
-    function setFile(file: File) {
-        if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-            toast.error(`文件大小不能超过${MAX_FILE_SIZE_MB}mb`)
-            return;
-        }
-
-        const reader = new FileReader()
-        reader.readAsDataURL(file)
-        reader.onloadend = () => {
-            const img = new Image()
-            const imgurl = reader.result as string
-            img.src = imgurl
-            img.onload = async () => { // 加载图片获取分辨率
-                const response = await countPoints(img.width, img.height, 1) // 计算需要消耗的点数
-                if (response?.code == 200) {
-                    setPoints(response?.data?.points);
-                    setImgFile(file);
-                    setImgbase64(imgurl);
-                    setFormState({ ...FormState, width: img.width, height: img.height })
-                }
-            }
-        }
-    }
 
     const handleChangeForm = (e: any) => {
         const { name, value } = e.target;
@@ -107,35 +83,56 @@ export default function Workbench({
         if (response?.code == 200) {
             setPoints(response?.data?.points)
         }
-    }, 600)
+    }, 600);
+
+    const setFile = useCallback((file: File) => {
+        if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+            toast.error(`文件大小不能超过${MAX_FILE_SIZE_MB}mb`)
+            return;
+        }
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onloadend = () => {
+            const img = new Image()
+            const imgurl = reader.result as string
+            img.src = imgurl
+            img.onload = async () => { // 加载图片获取分辨率
+                const response = await countPoints(img.width, img.height, 1) // 计算需要消耗的点数
+                if (response?.code == 200) {
+                    setPoints(response?.data?.points);
+                    setImgFile(file);
+                    setImgbase64(imgurl);
+                    // 使用函数更新来更新FormState，避免使用外部的FormState
+                    setFormState((prevState) => ({
+                        ...prevState,
+                        width: img.width,
+                        height: img.height,
+                    }));
+                }
+            }
+        }
+    }, []);
+
+    // 默认id存在展示原图情形
+    useEffect(() => {
+        if (!inputImg) {
+            return
+        }
+        (async () => {
+            const file = await FetchImg(uploadPath + inputImg);
+            if (file) {
+                setFile(file);
+            }
+        })()
+    }, [inputImg, setFile]);
 
     useEffect(() => {
         setFormState(inputParams);
         updatePoints();
-    }, [inputParams])
-
-    // 默认id存在展示原图情形
-    useEffect(() => {
-        if (inputImg) {
-            fetchUrlImg(inputImg)
-        }
-    }, [])
-
-    // 抓取网络图片，放入上传栏
-    async function fetchUrlImg(url: string) {
-        try {
-            const response = await fetch(url)
-            const blob = await response.blob()
-            const fileName = path.basename(url)
-            const file = new File([blob], fileName, { type: blob.type })
-            setFile(file)
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    }, [inputParams, updatePoints])
 
     return (
-        <div className="w-full flex justify-center transition-all duration-300 my-5">
+        <div className="w-full flex justify-center transition-all duration-300 my-5 bg-white">
             <form ref={formRef} id="txt2img-form" className="w-full bg-card rounded-md border border-input p-6 pt-3 flex flex-col md:flex-row md:space-x-4">
                 <div className="flex-1 space-y-3">
                     <div className="form-control ">

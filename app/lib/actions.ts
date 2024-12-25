@@ -3,8 +3,6 @@
 import { fetchPost } from './fetch';
 import { cookies } from 'next/headers';
 import { Token } from './serverUtils';
-import { AuthError } from 'next-auth';
-import { signIn as callSignIn, auth } from '@/auth/auth'
 
 export async function regist(
     prevState: string | undefined,
@@ -42,7 +40,7 @@ export async function regist(
     return response;
 }
 
-export async function signInBak(
+export async function signIn(
     prevState: string | undefined,
     formData: FormData,
 ) {
@@ -128,24 +126,4 @@ export async function signOut() {
 
     // 请求登录接口
     return { code: 200, msg: "退出成功" };
-}
-
-export async function signIn(
-    prevState: string | undefined,
-    formData: FormData,
-) {
-    try {
-        await callSignIn('credentials', formData);
-    } catch (error) {
-        console.log(await auth())
-        if (error instanceof AuthError) {
-            switch (error.type) {
-                case 'CredentialsSignin':
-                    return 'Invalid credentials.';
-                default:
-                    return error.message;
-            }
-        }
-        throw error;
-    }
 }

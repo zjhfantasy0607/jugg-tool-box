@@ -1,18 +1,17 @@
 'use client'
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { changePassword } from '@/app/lib/actions';
 import { sendEmailCode } from '@/app/lib/api';
-
 import { useAppSelector, useAppDispatch, useToggleDialog } from '@/store/hook';
 import { selectUserinfo } from '@/store/slices/userinfoSlice';
 import { setDialogType, selectCaptchaToken, setCaptchaToken } from '@/store/slices/dialogSlice';
+import { toggleIsShow } from '@/store/slices/dialogSlice';
 
-export default function () {
+export default function ForgetDialog() {
     const reduxDispatch = useAppDispatch();
-    const toogleDialog = useToggleDialog();
 
     const captchaToken = useAppSelector(state => selectCaptchaToken(state, "forget")) || '';
     const userInfo = useAppSelector(selectUserinfo);
@@ -24,42 +23,6 @@ export default function () {
     const formRef = useRef<HTMLFormElement>(null);  // 创建表单引用
     const captcahFrom = useRef<string>('');  // 记录人机验证触发起来的位置
 
-    useEffect(() => {
-        if (!response) return
-        if (response?.code == 200) {
-            toast.success('修改成功')
-            formRef?.current?.reset() // 重置表单状态
-            toogleDialog() // 关闭注册窗口
-        } else {
-            // 人机验证失败时重置人机验证状态
-            if (response.msg === '验证码错误') {
-                reduxDispatch(setCaptchaToken({ key: 'forget', val: '' }))
-            }
-            toast.error(response?.msg)
-        }
-
-    }, [response])
-
-    useEffect(() => {
-        if (!captchaToken) return
-
-        if (captcahFrom.current === 'sendCode') { // 人机验证成功后自动触发发送邮件
-            if (userInfo) {
-                callSendEmailCode(userInfo.email, captchaToken)
-            } else {
-                toast.error("用户信息已过期");
-            }
-        } else if (captcahFrom.current === 'submit') { // 人机验证成功后自动触发提交表单
-            // 触发表单提交
-            formRef?.current?.requestSubmit()
-        }
-
-        setTimeout( // 两分钟后token过期, 清除token
-            () => reduxDispatch(setCaptchaToken({ key: 'forget', val: '' })),
-            (1000 * 60 * 2)
-        )
-    }, [captchaToken])
-
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         // 无人机验证token时，阻止表单默认提交行为，触发人机验证token
         if (!captchaToken) {
@@ -68,6 +31,20 @@ export default function () {
             captcahFrom.current = 'submit'
             reduxDispatch(setDialogType("captcha"))
         }
+    }
+
+    // 设置发送邮箱验证码为禁用
+    function disabledSendEmail(time: number) {
+        setIsDisabled(time);
+        const timer = setInterval(() => {
+            setIsDisabled(prevIsDisabled => {
+                if (prevIsDisabled <= 1) {
+                    clearInterval(timer);
+                    return 0;
+                }
+                return prevIsDisabled - 1;
+            });
+        }, 1000);
     }
 
     // 发送邮箱验证码
@@ -90,7 +67,7 @@ export default function () {
     }
 
     // 发送邮件
-    async function callSendEmailCode(email: string, token: string) {
+    const callSendEmailCode = useCallback(async (email: string, token: string) => {
         //请求前禁用发送按钮
         setIsSending(true);
         // 发送验证码
@@ -104,21 +81,43 @@ export default function () {
         } else if (resp?.code) {
             toast.error(resp?.msg || "未知错误")
         }
-    }
+    }, []);
 
-    // 设置发送邮箱验证码为禁用
-    function disabledSendEmail(time: number) {
-        setIsDisabled(time);
-        const timer = setInterval(() => {
-            setIsDisabled(prevIsDisabled => {
-                if (prevIsDisabled <= 1) {
-                    clearInterval(timer);
-                    return 0;
-                }
-                return prevIsDisabled - 1;
-            });
-        }, 1000);
-    }
+    useEffect(() => {
+        if (!response) return
+        if (response?.code == 200) {
+            toast.success('修改成功')
+            formRef?.current?.reset() // 重置表单状态
+            reduxDispatch(toggleIsShow()); // 关闭登录窗口
+        } else {
+            // 人机验证失败时重置人机验证状态
+            if (response.msg === '验证码错误') {
+                reduxDispatch(setCaptchaToken({ key: 'forget', val: '' }))
+            }
+            toast.error(response?.msg)
+        }
+
+    }, [response, reduxDispatch])
+
+    useEffect(() => {
+        if (!captchaToken) return
+
+        if (captcahFrom.current === 'sendCode') { // 人机验证成功后自动触发发送邮件
+            if (userInfo) {
+                callSendEmailCode(userInfo.email, captchaToken)
+            } else {
+                toast.error("用户信息已过期");
+            }
+        } else if (captcahFrom.current === 'submit') { // 人机验证成功后自动触发提交表单
+            // 触发表单提交
+            formRef?.current?.requestSubmit()
+        }
+
+        setTimeout( // 两分钟后token过期, 清除token
+            () => reduxDispatch(setCaptchaToken({ key: 'forget', val: '' })),
+            (1000 * 60 * 2)
+        )
+    }, [captchaToken, callSendEmailCode, reduxDispatch, userInfo]);
 
     return (
         <>

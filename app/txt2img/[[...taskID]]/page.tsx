@@ -1,7 +1,7 @@
 import Client from "./client"
 import { getTask } from "@/app/lib/api"
 
-export default async function ({ params }: { params: { taskID: string[] } }) {
+export default async function Tx2img({ params }: { params: { taskID: string[] } }) {
     const queryTaskId = (params.taskID && params.taskID[0]) || '';
 
     let outputImgs = [];
